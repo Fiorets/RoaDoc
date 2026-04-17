@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoaDoc — Documento di Trasporto digitale</title>
+<style>
+:root {
+  --navy:#1e3a5f; --navy-light:#2d5080; --orange:#F97316;
+  --blue:#378ADD; --blue-light:#E6F1FB; --blue-text:#0C447C;
+  --green:#639922; --green-light:#EAF3DE; --green-text:#27500A;
+  --amber:#BA7517; --amber-light:#FAEEDA; --amber-text:#633806;
+  --red:#E24B4A; --red-light:#FCEBEB; --red-text:#A32D2D;
+  --gray-50:#F7F7F6; --gray-100:#EFEFED; --gray-200:#D3D1C7;
+  --gray-600:#5F5E5A; --gray-800:#2C2C2A;
+  --border:rgba(0,0,0,0.10); --radius:8px; --radius-lg:12px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--font); background:var(--gray-50); color:var(--gray-800); font-size:14px; line-height:1.5; }
+.hidden { display:none !important; }
+
+/* ── Topbar ── */
+.topbar { background:var(--navy); padding:0 28px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; border-bottom:1px solid rgba(255,255,255,0.09); }
+.logo-text { font-size:21px; font-weight:700; color:#fff; letter-spacing:-.3px; cursor:pointer; user-select:none; }
+.logo-text span { color:var(--orange); }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0; }
+.topbar-name { color:rgba(255,255,255,.9); font-size:14px; font-weight:500; }
+.role-pill { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:500; }
+.pill-m { background:#E6F1FB; color:#0C447C; }
+.pill-v { background:#EAF3DE; color:#27500A; }
+.pill-d { background:#FAEEDA; color:#633806; }
+.btn-exit { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; border-radius:var(--radius); padding:6px 14px; font-size:13px; cursor:pointer; }
+.btn-exit:hover { background:rgba(255,255,255,.2); }
+
+/* ── Layout ── */
+.page { padding:28px 32px; max-width:980px; margin:0 auto; }
+
+/* ── Buttons ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:var(--radius); font-size:14px; font-weight:500; cursor:pointer; border:1px solid var(--border); background:#fff; color:var(--gray-800); transition:background .12s; }
+.btn:hover { background:var(--gray-100); }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.btn-primary { background:var(--navy); color:#fff; border-color:var(--navy); }
+.btn-primary:hover:not(:disabled) { background:var(--navy-light); }
+.btn-orange { background:var(--orange); color:#fff; border-color:var(--orange); }
+.btn-orange:hover:not(:disabled) { background:#ea6c00; }
+.btn-green { background:var(--green); color:#fff; border-color:var(--green); }
+.btn-green:hover:not(:disabled) { background:#50801b; }
+.btn-sm { padding:6px 12px; font-size:13px; }
+.btn-link { background:none; border:none; color:var(--blue); cursor:pointer; padding:0; font-size:14px; font-weight:500; }
+.btn-link:hover { text-decoration:underline; }
+
+/* ── Cards ── */
+.card { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:16px; }
+.card-title { font-size:15px; font-weight:600; margin-bottom:14px; color:var(--gray-800); }
+
+/* ── Badge ── */
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:500; }
+.badge-blue  { background:var(--blue-light);  color:var(--blue-text);  }
+.badge-green { background:var(--green-light); color:var(--green-text); }
+.badge-amber { background:var(--amber-light); color:var(--amber-text); }
+.badge-red   { background:var(--red-light);   color:var(--red-text);   }
+
+/* ── Table ── */
+table { width:100%; border-collapse:collapse; }
+th { text-align:left; font-size:12px; font-weight:600; color:var(--gray-600); padding:8px 12px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:.04em; background:var(--gray-50); }
+td { padding:12px; border-bottom:1px solid var(--border); font-size:14px; vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--gray-50); }
+.tlink { color:var(--navy); cursor:pointer; font-weight:500; }
+.tlink:hover { text-decoration:underline; }
+
+/* ── Page header ── */
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; }
+.page-title  { font-size:20px; font-weight:600; }
+.page-subtitle { font-size:14px; color:var(--gray-600); margin-top:2px; }
+
+/* ── Stats ── */
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.stat-card  { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 20px; }
+.stat-label { font-size:12px; color:var(--gray-600); margin-bottom:4px; }
+.stat-value { font-size:28px; font-weight:700; }
+
+/* ── Forms ── */
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:13px; color:var(--gray-600); margin-bottom:5px; font-weight:500; }
+.form-group input,.form-group select,.form-group textarea {
+  width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius);
+  font-size:14px; font-family:var(--font); background:#fff; color:var(--gray-800);
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus { outline:none; border-color:var(--navy); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.readonly-field { background:var(--gray-50) !important; color:var(--gray-600) !important; }
+
+/* ── Detail ── */
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.detail-row  { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); gap:12px; }
+.detail-row:last-child { border-bottom:none; }
+.detail-label { color:var(--gray-600); font-size:13px; flex-shrink:0; }
+.detail-value { font-weight:500; font-size:13px; text-align:right; }
+
+/* ── Parties ── */
+.parties-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.party-box   { border-radius:var(--radius); padding:12px 14px; }
+.p-role  { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+.p-name  { font-size:13px; font-weight:500; }
+.p-status { font-size:12px; margin-top:4px; }
+
+/* ── Timeline ── */
+.timeline { list-style:none; padding:0; }
+.tl-item  { display:flex; gap:14px; padding-bottom:18px; position:relative; }
+.tl-item:last-child { padding-bottom:0; }
+.tl-item:not(:last-child)::before { content:""; position:absolute; left:9px; top:22px; bottom:0; width:1px; background:var(--border); }
+.tl-dot   { width:20px; height:20px; border-radius:50%; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; }
+.tl-done   { background:var(--green); }
+.tl-active { background:var(--navy); }
+.tl-wait   { background:var(--gray-200); }
+.tl-title  { font-weight:500; font-size:14px; }
+.tl-time   { font-size:12px; color:var(--gray-600); margin-top:1px; }
+
+/* ── Action box ── */
+.action-box { border-radius:var(--radius-lg); padding:24px; text-align:center; margin-bottom:16px; border:1px solid var(--border); background:var(--gray-50); }
+.action-box h3 { font-size:16px; margin-bottom:8px; }
+.action-box p  { color:var(--gray-600); font-size:14px; margin-bottom:18px; }
+
+/* ── Landing ── */
+#landing { min-height:100vh; background:var(--navy); display:flex; flex-direction:column; }
+.landing-nav  { padding:20px 40px; display:flex; align-items:center; justify-content:space-between; }
+.landing-hero { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
+.landing-hero h1 { font-size:38px; font-weight:700; color:#fff; line-height:1.25; margin-bottom:16px; max-width:620px; }
+.landing-hero p  { font-size:18px; color:rgba(255,255,255,.75); max-width:480px; margin-bottom:36px; }
+.landing-cards   { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; max-width:680px; margin-top:44px; }
+.lcard { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:var(--radius-lg); padding:20px; text-align:center; }
+.lcard-icon  { font-size:28px; margin-bottom:10px; }
+.lcard-title { font-weight:600; color:#fff; font-size:14px; margin-bottom:6px; }
+.lcard-desc  { font-size:12px; color:rgba(255,255,255,.6); }
+
+/* ── Login ── */
+#login { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--gray-50); }
+.login-box { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:36px; width:100%; max-width:440px; box-shadow:0 2px 16px rgba(0,0,0,.07); }
+.login-logo  { text-align:center; margin-bottom:28px; }
+.login-title { font-size:18px; font-weight:600; text-align:center; margin-bottom:6px; }
+.login-sub   { font-size:14px; color:var(--gray-600); text-align:center; margin-bottom:24px; }
+.role-btn    { padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius-lg); cursor:pointer; background:#fff; text-align:left; display:flex; align-items:center; gap:14px; width:100%; margin-bottom:10px; transition:border-color .12s,background .12s; }
+.role-btn:hover,.role-btn.selected { border-color:var(--navy); background:var(--blue-light); }
+.role-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.role-name { font-weight:600; font-size:14px; }
+.role-desc { font-size:12px; color:var(--gray-600); }
+.login-actions { margin-top:20px; display:flex; justify-content:space-between; align-items:center; }
+
+/* ── Merce form row ── */
+.merce-row { display:grid; grid-template-columns:3fr 80px 100px 100px 36px; gap:8px; align-items:end; margin-bottom:10px; }
+.merce-row .form-group { margin-bottom:0; }
+
+/* ── Toast ── */
+#toast { position:fixed; bottom:24px; right:24px; background:var(--navy); color:#fff; padding:12px 20px; border-radius:var(--radius); font-size:14px; z-index:9999; display:none; box-shadow:0 4px 12px rgba(0,0,0,.18); max-width:320px; }
+
+/* ── Empty state ── */
+.empty { text-align:center; padding:50px 20px; color:var(--gray-600); }
+.empty-icon  { font-size:36px; margin-bottom:10px; }
+.empty-title { font-size:15px; font-weight:600; color:var(--gray-800); margin-bottom:6px; }
+
+/* ── Merce table inside detail ── */
+.merce-detail td:first-child { font-weight:500; }
+
+/* ── Loading spinner ── */
+.spinner { text-align:center; padding:48px 20px; color:var(--gray-600); font-size:14px; }
+.spinner::before { content:""; display:block; width:32px; height:32px; border:3px solid var(--gray-200); border-top-color:var(--navy); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <nav class="landing-nav">
+    <div class="logo-text">Roa<span>Doc</span></div>
+    <button class="btn-exit" onclick="goToLogin()">Accedi alla demo →</button>
+  </nav>
+  <div class="landing-hero">
+    <h1>Il Documento di Trasporto digitale per il trasporto italiano</h1>
+    <p>Mittente, vettore e destinatario connessi in un unico flusso. Zero carta, zero email, zero confusione.</p>
+    <button class="btn btn-orange" style="font-size:16px;padding:13px 30px;" onclick="goToLogin()">Prova la demo →</button>
+    <div class="landing-cards">
+      <div class="lcard"><div class="lcard-icon">📋</div><div class="lcard-title">Crea il DdT</div><div class="lcard-desc">Il mittente compila il documento una sola volta</div></div>
+      <div class="lcard"><div class="lcard-icon">🚛</div><div class="lcard-title">In transito</div><div class="lcard-desc">Il vettore gestisce la spedizione in tempo reale</div></div>
+      <div class="lcard"><div class="lcard-icon">✅</div><div class="lcard-title">Confermato</div><div class="lcard-desc">Il destinatario conferma la consegna digitalmente</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="hidden">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-text" style="font-size:30px;">Roa<span style="color:var(--orange)">Doc</span></div>
+    </div>
+    <div class="login-title">Accedi alla demo</div>
+    <div class="login-sub">Seleziona il tuo profilo per entrare nella piattaforma</div>
+    <div class="role-btn" onclick="selectRole('mittente',this)">
+      <div class="role-icon" style="background:#E6F1FB;">🏭</div>
+      <div><div class="role-name">Mittente</div><div class="role-desc">Acme Ceramiche Srl — Crea e invia DdT</div></div>
+    </div>
+    <div class="role-btn" onclick="selectRole('vettore',this)">
+      <div class="role-icon" style="background:#EAF3DE;">🚛</div>
+      <div><div class="role-name">Vettore</div><div class="role-desc">Trans Adriatica Srl — Gestisci spedizioni</div></div>
+    </div>
+    <div class="role-btn" onclick="selectRole('destinatario',this)">
+      <div class="role-icon" style="background:#FAEEDA;">📦</div>
+      <div><div class="role-name">Destinatario</div><div class="role-desc">Bayern Handel GmbH — Ricevi e conferma</div></div>
+    </div>
+    <div class="login-actions">
+      <button class="btn-link" onclick="goToLanding()">← Torna alla home</button>
+      <button class="btn btn-primary" onclick="doLogin()">Entra →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="logo-text" onclick="goHome()">Roa<span>Doc</span></div>
+    <div class="topbar-right">
+      <span class="role-pill" id="top-pill"></span>
+      <div class="avatar" id="top-avatar"></div>
+      <span class="topbar-name" id="top-name"></span>
+      <button class="btn-exit" onclick="logout()">Esci</button>
+    </div>
+  </div>
+
+  <!-- MITTENTE DASHBOARD -->
+  <div id="v-m-dash" class="hidden">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-subtitle" id="m-welcome"></div>
+        </div>
+        <button class="btn btn-orange" onclick="navNuovoDdt()">＋ Nuovo DdT</button>
+      </div>
+      <div class="stats-row" id="m-stats"></div>
+      <div class="card">
+        <div class="card-title">I tuoi DdT</div>
+        <table>
+          <thead><tr><th>Numero</th><th>Destinatario</th><th>Vettore</th><th>Data</th><th>Stato</th><th></th></tr></thead>
+          <tbody id="m-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MITTENTE NUOVO DdT -->
+  <div id="v-m-nuovo" class="hidden">
+    <div class="page" style="max-width:740px;">
+      <div class="page-header">
+        <div>
+          <button class="btn-link" onclick="nav('v-m-dash');renderMDash()">← dashboard</button>
+          <div class="page-title" style="margin-top:8px;">Nuovo DdT</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Documento</div>
+        <div class="form-row">
+          <div class="form-group"><label>Numero DdT</label><input type="text" id="f-num" class="readonly-field" readonly placeholder="Assegnato automaticamente"></div>
+          <div class="form-group"><label>Data</label><input type="date" id="f-data"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏭 Mittente</div>
+        <div class="form-row">
+          <div class="form-group"><label>Ragione sociale</label><input type="text" id="f-m-nome" class="readonly-field" readonly></div>
+          <div class="form-group"><label>P.IVA</label><input type="text" id="f-m-piva" class="readonly-field" readonly></div>
+        </div>
+        <div class="form-group"><label>Indirizzo</label><input type="text" id="f-m-ind" class="readonly-field" readonly></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🚛 Vettore</div>
+        <div class="form-row">
+          <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-v-nome" placeholder="Es. Trans Adriatica Srl"></div>
+          <div class="form-group"><label>P.IVA</label><input type="text" id="f-v-piva" placeholder="IT…"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📦 Destinatario</div>
+        <div class="form-row">
+          <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-d-nome" placeholder="Es. Bayern Handel GmbH"></div>
+          <div class="form-group"><label>Paese</label><input type="text" id="f-d-paese" placeholder="Es. Germania"></div>
+        </div>
+        <div class="form-group"><label>Indirizzo consegna</label><input type="text" id="f-d-ind" placeholder="Es. Müllerstr. 42, 80469 München"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📦 Merce</div>
+        <div style="display:grid;grid-template-columns:3fr 80px 100px 100px 36px;gap:8px;margin-bottom:6px;">
+          <span style="font-size:12px;color:var(--gray-600);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Descrizione</span>
+          <span style="font-size:12px;color:var(--gray-600);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Qtà</span>
+          <span style="font-size:12px;color:var(--gray-600);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Unità</span>
+          <span style="font-size:12px;color:var(--gray-600);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Peso</span>
+          <span></span>
+        </div>
+        <div id="merci-rows"></div>
+        <button class="btn btn-sm" style="margin-top:4px;" onclick="addMerceRow()">＋ Aggiungi riga</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 Note</div>
+        <div class="form-group"><label>Note per il vettore</label><textarea id="f-note-v" rows="2" placeholder="Es. Fragile — maneggiare con cura"></textarea></div>
+        <div class="form-group"><label>Note per il destinatario</label><textarea id="f-note-d" rows="2" placeholder="Es. Consegnare al magazzino B"></textarea></div>
+      </div>
+      <div style="display:flex;gap:12px;padding-bottom:48px;">
+        <button class="btn" onclick="nav('v-m-dash');renderMDash()">Annulla</button>
+        <button class="btn btn-orange" id="btn-crea" onclick="creaDoc()">Invia a vettore e destinatario →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MITTENTE DETTAGLIO -->
+  <div id="v-m-det" class="hidden">
+    <div class="page" id="m-det-body"></div>
+  </div>
+
+  <!-- VETTORE DASHBOARD -->
+  <div id="v-v-dash" class="hidden">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard vettore</div>
+          <div class="page-subtitle" id="v-welcome"></div>
+        </div>
+      </div>
+      <div class="stats-row" id="v-stats"></div>
+      <div class="card">
+        <div class="card-title">Spedizioni assegnate</div>
+        <table>
+          <thead><tr><th>Numero</th><th>Mittente</th><th>Destinazione</th><th>Data</th><th>Stato</th><th></th></tr></thead>
+          <tbody id="v-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VETTORE DETTAGLIO -->
+  <div id="v-v-det" class="hidden">
+    <div class="page" id="v-det-body"></div>
+  </div>
+
+  <!-- DESTINATARIO DASHBOARD -->
+  <div id="v-d-dash" class="hidden">
+    <div class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Ricezione merci</div>
+          <div class="page-subtitle" id="d-welcome"></div>
+        </div>
+      </div>
+      <div class="stats-row" id="d-stats"></div>
+      <div class="card">
+        <div class="card-title">DdT in arrivo e ricevuti</div>
+        <table>
+          <thead><tr><th>Numero</th><th>Mittente</th><th>Merce</th><th>Data</th><th>Stato</th><th></th></tr></thead>
+          <tbody id="d-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESTINATARIO DETTAGLIO -->
+  <div id="v-d-det" class="hidden">
+    <div class="page" id="d-det-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Stato globale ──────────────────────────────────────────
+let currentRole  = null;
+let selectedRole = null;
+let merceRowCount = 0;
+
+// ── Profili utente demo ────────────────────────────────────
+const UTENTI = {
+  mittente: {
+    nome: 'Acme Ceramiche Srl', piva: 'IT02345678901',
+    indirizzo: 'Via Roma 15, 41100 Modena',
+    avatar: 'AC', bg: '#E6F1FB', color: '#0C447C',
+    pill: 'Mittente', pillClass: 'pill-m'
+  },
+  vettore: {
+    nome: 'Trans Adriatica Srl', piva: 'IT09876543210',
+    indirizzo: 'Via del Porto 8, 60100 Ancona',
+    avatar: 'TA', bg: '#EAF3DE', color: '#27500A',
+    pill: 'Vettore', pillClass: 'pill-v'
+  },
+  destinatario: {
+    nome: 'Bayern Handel GmbH', piva: 'DE345678901',
+    indirizzo: 'Müllerstr. 42, 80469 München (DE)',
+    avatar: 'BH', bg: '#FAEEDA', color: '#633806',
+    pill: 'Destinatario', pillClass: 'pill-d'
+  }
+};
+
+const STATI = {
+  attesa_vettore: { label: 'In attesa vettore', cls: 'badge-amber' },
+  accettato:      { label: 'Accettato',          cls: 'badge-blue'  },
+  in_transito:    { label: 'In transito',        cls: 'badge-blue'  },
+  consegnato:     { label: 'Consegnato',         cls: 'badge-green' }
+};
+
+// ── API helper ─────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ error: 'Errore di rete' }));
+    throw new Error(err.error || 'Errore');
+  }
+  return r.json();
+}
+
+// ── Helpers UI ─────────────────────────────────────────────
+function badge(stato) {
+  const s = STATI[stato] || { label: stato, cls: 'badge-blue' };
+  return `<span class="badge ${s.cls}">${s.label}</span>`;
+}
+
+function tlHtml(timeline) {
+  return timeline.map((t, i) => {
+    const firstPending = timeline.findIndex(x => !x.done);
+    const cls = t.done ? 'tl-done' : (i === firstPending ? 'tl-active' : 'tl-wait');
+    return `<li class="tl-item">
+      <div class="tl-dot ${cls}">${t.done ? '✓' : ''}</div>
+      <div><div class="tl-title">${t.label}</div><div class="tl-time">${t.ts || 'In attesa'}</div></div>
+    </li>`;
+  }).join('');
+}
+
+function partyStatus(stato, role) {
+  if (role === 'mittente') return { txt: '✓ Firmato', color: 'var(--green-text)' };
+  if (role === 'vettore')  return stato === 'attesa_vettore'
+    ? { txt: '⏳ In attesa',  color: 'var(--amber-text)' }
+    : { txt: '✓ Accettato',  color: 'var(--green-text)' };
+  if (role === 'destinatario') return stato === 'consegnato'
+    ? { txt: '✓ Confermato', color: 'var(--green-text)' }
+    : { txt: '⏳ In attesa',  color: 'var(--amber-text)' };
+  return { txt: '', color: '' };
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.style.display = 'none', 3200);
+}
+
+function setLoading(tbodyId) {
+  document.getElementById(tbodyId).innerHTML =
+    '<tr><td colspan="6"><div class="spinner">Caricamento…</div></td></tr>';
+}
+
+// ── Navigazione ────────────────────────────────────────────
+function nav(id) {
+  document.querySelectorAll('[id^="v-"]').forEach(el => el.classList.add('hidden'));
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  if (!currentRole) return;
+  if (currentRole === 'mittente')     { renderMDash(); nav('v-m-dash'); }
+  if (currentRole === 'vettore')      { renderVDash(); nav('v-v-dash'); }
+  if (currentRole === 'destinatario') { renderDDash(); nav('v-d-dash'); }
+}
+
+function goToLanding() {
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.add('hidden');
+}
+
+function goToLogin() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('login').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+}
+
+// ── Login / Logout ─────────────────────────────────────────
+function selectRole(role, el) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedRole = role;
+}
+
+function doLogin() {
+  if (!selectedRole) { toast('Seleziona un profilo per continuare'); return; }
+  currentRole = selectedRole;
+  const u = UTENTI[currentRole];
+  document.getElementById('top-pill').textContent   = u.pill;
+  document.getElementById('top-pill').className     = 'role-pill ' + u.pillClass;
+  document.getElementById('top-avatar').textContent = u.avatar;
+  document.getElementById('top-avatar').style.background = u.bg;
+  document.getElementById('top-avatar').style.color      = u.color;
+  document.getElementById('top-name').textContent  = u.nome;
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  goHome();
+}
+
+function logout() {
+  currentRole = selectedRole = null;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login').classList.remove('hidden');
+}
+
+// ════════════════════════════════════════════════════════════
+// MITTENTE
+// ════════════════════════════════════════════════════════════
+
+async function renderMDash() {
+  const u = UTENTI.mittente;
+  document.getElementById('m-welcome').textContent = 'Benvenuto, ' + u.nome;
+  setLoading('m-list');
+  document.getElementById('m-stats').innerHTML = '';
+
+  let ddts;
+  try {
+    ddts = await api('GET', `/api/ddts?ruolo=mittente&nome=${encodeURIComponent(u.nome)}`);
+  } catch(e) {
+    toast('⚠️ Errore caricamento dati'); return;
+  }
+
+  const inAttesa   = ddts.filter(d => d.stato === 'attesa_vettore').length;
+  const inTransito = ddts.filter(d => d.stato === 'in_transito' || d.stato === 'accettato').length;
+  const consegnati = ddts.filter(d => d.stato === 'consegnato').length;
+
+  document.getElementById('m-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">In attesa vettore</div><div class="stat-value" style="color:var(--amber)">${inAttesa}</div></div>
+    <div class="stat-card"><div class="stat-label">In transito</div><div class="stat-value" style="color:var(--blue)">${inTransito}</div></div>
+    <div class="stat-card"><div class="stat-label">Consegnati</div><div class="stat-value" style="color:var(--green)">${consegnati}</div></div>`;
+
+  if (!ddts.length) {
+    document.getElementById('m-list').innerHTML =
+      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Nessun DdT ancora</div><div>Crea il tuo primo documento di trasporto!</div></div></td></tr>';
+    return;
+  }
+  document.getElementById('m-list').innerHTML = ddts.map(d => `
+    <tr>
+      <td><span class="tlink" onclick="openMDet('${d.id}')">${d.id}</span></td>
+      <td>${d.destinatario.nome}</td>
+      <td>${d.vettore.nome}</td>
+      <td>${d.data}</td>
+      <td>${badge(d.stato)}</td>
+      <td><button class="btn btn-sm" onclick="openMDet('${d.id}')">Apri</button></td>
+    </tr>`).join('');
+}
+
+async function openMDet(id) {
+  nav('v-m-det');
+  document.getElementById('m-det-body').innerHTML = '<div class="spinner">Caricamento…</div>';
+  let d;
+  try { d = await api('GET', `/api/ddts/${id}`); } catch(e) { toast('⚠️ Errore'); return; }
+
+  const ms = partyStatus(d.stato, 'mittente');
+  const vs = partyStatus(d.stato, 'vettore');
+  const ds = partyStatus(d.stato, 'destinatario');
+
+  document.getElementById('m-det-body').innerHTML = `
+    <div class="page-header">
+      <div>
+        <button class="btn-link" onclick="nav('v-m-dash');renderMDash()">← dashboard</button>
+        <div class="page-title" style="margin-top:8px;">${d.id}</div>
+      </div>
+      ${badge(d.stato)}
+    </div>
+    <div class="parties-row">
+      <div class="party-box" style="background:var(--blue-light);">
+        <div class="p-role" style="color:var(--blue-text)">Mittente</div>
+        <div class="p-name">${d.mittente.nome}</div>
+        <div class="p-status" style="color:${ms.color}">${ms.txt}</div>
+      </div>
+      <div class="party-box" style="background:var(--green-light);">
+        <div class="p-role" style="color:var(--green-text)">Vettore</div>
+        <div class="p-name">${d.vettore.nome}</div>
+        <div class="p-status" style="color:${vs.color}">${vs.txt}</div>
+      </div>
+      <div class="party-box" style="background:var(--amber-light);">
+        <div class="p-role" style="color:var(--amber-text)">Destinatario</div>
+        <div class="p-name">${d.destinatario.nome}</div>
+        <div class="p-status" style="color:${ds.color}">${ds.txt}</div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-title">Dettagli documento</div>
+        <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
+        <div class="detail-row"><span class="detail-label">Data emissione</span><span class="detail-value">${d.data}</span></div>
+        <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">P.IVA mittente</span><span class="detail-value">${d.mittente.piva}</span></div>
+        <div class="detail-row"><span class="detail-label">Vettore</span><span class="detail-value">${d.vettore.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">Indirizzo consegna</span><span class="detail-value">${d.destinatario.indirizzo || '—'}</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Stato spedizione</div>
+        <ul class="timeline">${tlHtml(d.timeline)}</ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Merce</div>
+      <table class="merce-detail">
+        <thead><tr><th>Descrizione</th><th>Quantità</th><th>Unità</th><th>Peso</th></tr></thead>
+        <tbody>${d.merci.map(m => `<tr><td>${m.desc}</td><td>${m.qty}</td><td>${m.unita}</td><td>${m.peso||'—'}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${(d.noteVettore || d.noteDestinazione) ? `
+    <div class="card">
+      <div class="card-title">Note</div>
+      ${d.noteVettore ? `<div class="detail-row"><span class="detail-label">Per il vettore</span><span class="detail-value">${d.noteVettore}</span></div>` : ''}
+      ${d.noteDestinazione ? `<div class="detail-row"><span class="detail-label">Per il destinatario</span><span class="detail-value">${d.noteDestinazione}</span></div>` : ''}
+    </div>` : ''}
+    <div style="height:48px;"></div>`;
+}
+
+// ── Nuovo DdT ──────────────────────────────────────────────
+async function navNuovoDdt() {
+  const u = UTENTI.mittente;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-data').value    = today;
+  document.getElementById('f-m-nome').value  = u.nome;
+  document.getElementById('f-m-piva').value  = u.piva;
+  document.getElementById('f-m-ind').value   = u.indirizzo;
+  document.getElementById('f-v-nome').value  = '';
+  document.getElementById('f-v-piva').value  = '';
+  document.getElementById('f-d-nome').value  = '';
+  document.getElementById('f-d-paese').value = '';
+  document.getElementById('f-d-ind').value   = '';
+  document.getElementById('f-note-v').value  = '';
+  document.getElementById('f-note-d').value  = '';
+  document.getElementById('f-num').value     = '';
+  document.getElementById('f-num').placeholder = 'Assegnato automaticamente';
+  merceRowCount = 0;
+  document.getElementById('merci-rows').innerHTML = '';
+  addMerceRow();
+  nav('v-m-nuovo');
+
+  // Precarica il prossimo ID
+  try {
+    const { id } = await api('GET', '/api/ddts/next-id');
+    document.getElementById('f-num').value = id;
+  } catch(_) {}
+}
+
+function addMerceRow() {
+  merceRowCount++;
+  const i = merceRowCount;
+  const row = document.createElement('div');
+  row.className = 'merce-row';
+  row.id = 'mr-' + i;
+  row.innerHTML = `
+    <div class="form-group"><input type="text"   id="md-${i}" placeholder="Es. Piastrelle ceramica"></div>
+    <div class="form-group"><input type="number" id="mq-${i}" placeholder="0" min="1" style="text-align:center;"></div>
+    <div class="form-group">
+      <select id="mu-${i}">
+        <option>colli</option><option>pallet</option><option>bancali</option><option>kg</option><option>pezzi</option>
+      </select>
+    </div>
+    <div class="form-group"><input type="text" id="mp-${i}" placeholder="Es. 100 kg"></div>
+    <div>${i > 1 ? `<button class="btn btn-sm" style="color:var(--red-text);padding:9px 10px;" onclick="document.getElementById('mr-${i}').remove()">✕</button>` : ''}</div>`;
+  document.getElementById('merci-rows').appendChild(row);
+}
+
+async function creaDoc() {
+  const vNome = document.getElementById('f-v-nome').value.trim();
+  const dNome = document.getElementById('f-d-nome').value.trim();
+  if (!vNome) { toast('⚠️ Inserisci il nome del vettore'); return; }
+  if (!dNome) { toast('⚠️ Inserisci il nome del destinatario'); return; }
+
+  const merci = [];
+  document.querySelectorAll('#merci-rows .merce-row').forEach(row => {
+    const ri = row.id.replace('mr-', '');
+    const desc = document.getElementById('md-' + ri)?.value.trim() || '';
+    if (desc) merci.push({
+      desc,
+      qty:   parseInt(document.getElementById('mq-' + ri)?.value) || 1,
+      unita: document.getElementById('mu-' + ri)?.value || 'colli',
+      peso:  document.getElementById('mp-' + ri)?.value.trim() || ''
+    });
+  });
+  if (!merci.length) { toast('⚠️ Aggiungi almeno una riga merce'); return; }
+
+  const rawDate = document.getElementById('f-data').value;
+  const dataFmt = rawDate
+    ? new Date(rawDate).toLocaleDateString('it-IT')
+    : new Date().toLocaleDateString('it-IT');
+
+  const btn = document.getElementById('btn-crea');
+  btn.disabled = true;
+  btn.textContent = 'Invio in corso…';
+
+  try {
+    const doc = await api('POST', '/api/ddts', {
+      data: dataFmt,
+      mittente:     { nome: UTENTI.mittente.nome, piva: UTENTI.mittente.piva, indirizzo: UTENTI.mittente.indirizzo },
+      vettore:      { nome: vNome, piva: document.getElementById('f-v-piva').value.trim() },
+      destinatario: { nome: dNome, paese: document.getElementById('f-d-paese').value.trim(), indirizzo: document.getElementById('f-d-ind').value.trim() },
+      merci,
+      noteVettore:      document.getElementById('f-note-v').value.trim(),
+      noteDestinazione: document.getElementById('f-note-d').value.trim()
+    });
+    toast('✓ ' + doc.id + ' creato e inviato!');
+    renderMDash();
+    nav('v-m-dash');
+  } catch(e) {
+    toast('⚠️ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Invia a vettore e destinatario →';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// VETTORE
+// ════════════════════════════════════════════════════════════
+
+async function renderVDash() {
+  const u = UTENTI.vettore;
+  document.getElementById('v-welcome').textContent = 'Benvenuto, ' + u.nome;
+  setLoading('v-list');
+  document.getElementById('v-stats').innerHTML = '';
+
+  let ddts;
+  try {
+    ddts = await api('GET', `/api/ddts?ruolo=vettore&nome=${encodeURIComponent(u.nome)}`);
+  } catch(e) {
+    toast('⚠️ Errore caricamento dati'); return;
+  }
+
+  const daAcc   = ddts.filter(d => d.stato === 'attesa_vettore').length;
+  const acc     = ddts.filter(d => d.stato === 'accettato').length;
+  const transit = ddts.filter(d => d.stato === 'in_transito').length;
+
+  document.getElementById('v-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Da accettare</div><div class="stat-value" style="color:var(--amber)">${daAcc}</div></div>
+    <div class="stat-card"><div class="stat-label">Accettati</div><div class="stat-value" style="color:var(--blue)">${acc}</div></div>
+    <div class="stat-card"><div class="stat-label">In transito</div><div class="stat-value" style="color:var(--navy)">${transit}</div></div>`;
+
+  if (!ddts.length) {
+    document.getElementById('v-list').innerHTML =
+      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">🚛</div><div class="empty-title">Nessuna spedizione assegnata</div></div></td></tr>';
+    return;
+  }
+  document.getElementById('v-list').innerHTML = ddts.map(d => `
+    <tr>
+      <td><span class="tlink" onclick="openVDet('${d.id}')">${d.id}</span></td>
+      <td>${d.mittente.nome}</td>
+      <td>${d.destinatario.nome}</td>
+      <td>${d.data}</td>
+      <td>${badge(d.stato)}</td>
+      <td><button class="btn btn-sm ${d.stato === 'attesa_vettore' ? 'btn-primary' : ''}" onclick="openVDet('${d.id}')">
+        ${d.stato === 'attesa_vettore' ? 'Accetta' : 'Gestisci'}
+      </button></td>
+    </tr>`).join('');
+}
+
+async function openVDet(id) {
+  nav('v-v-det');
+  document.getElementById('v-det-body').innerHTML = '<div class="spinner">Caricamento…</div>';
+  let d;
+  try { d = await api('GET', `/api/ddts/${id}`); } catch(e) { toast('⚠️ Errore'); return; }
+
+  let actionHtml = '';
+  if (d.stato === 'attesa_vettore') {
+    actionHtml = `<div class="action-box">
+      <h3>⏳ Nuova spedizione assegnata</h3>
+      <p>${d.mittente.nome} ti ha assegnato questo DdT. Accetta per prendere in carico la spedizione.</p>
+      <button class="btn btn-primary" onclick="accettaDdt('${d.id}')">✓ Accetta spedizione</button>
+    </div>`;
+  } else if (d.stato === 'accettato') {
+    actionHtml = `<div class="action-box">
+      <h3>🚛 Pronto a partire?</h3>
+      <p>Hai accettato la spedizione. Quando la merce è in viaggio, marca il DdT come "In transito".</p>
+      <button class="btn btn-orange" onclick="marcaTransito('${d.id}')">🚛 Marca in transito</button>
+    </div>`;
+  } else if (d.stato === 'in_transito') {
+    actionHtml = `<div class="action-box" style="background:var(--blue-light);border-color:#9bc4f0;">
+      <h3>🚛 Spedizione in corso</h3>
+      <p>Il DdT è in transito. In attesa della conferma di consegna dal destinatario.</p>
+    </div>`;
+  } else if (d.stato === 'consegnato') {
+    actionHtml = `<div class="action-box" style="background:var(--green-light);border-color:#a8d175;">
+      <h3>✅ Consegna completata</h3>
+      <p>Il destinatario ha confermato la ricezione. Spedizione completata con successo.</p>
+    </div>`;
+  }
+
+  document.getElementById('v-det-body').innerHTML = `
+    <div class="page-header">
+      <div>
+        <button class="btn-link" onclick="nav('v-v-dash');renderVDash()">← dashboard</button>
+        <div class="page-title" style="margin-top:8px;">${d.id}</div>
+      </div>
+      ${badge(d.stato)}
+    </div>
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-title">Dettagli spedizione</div>
+        <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
+        <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${d.data}</span></div>
+        <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">Partenza</span><span class="detail-value">${d.mittente.indirizzo||'—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">Consegna a</span><span class="detail-value">${d.destinatario.indirizzo||'—'}</span></div>
+        ${d.noteVettore ? `<div class="detail-row"><span class="detail-label">Note per te</span><span class="detail-value">${d.noteVettore}</span></div>` : ''}
+      </div>
+      <div class="card">
+        <div class="card-title">Stato spedizione</div>
+        <ul class="timeline">${tlHtml(d.timeline)}</ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Merce da trasportare</div>
+      <table class="merce-detail">
+        <thead><tr><th>Descrizione</th><th>Quantità</th><th>Unità</th><th>Peso</th></tr></thead>
+        <tbody>${d.merci.map(m => `<tr><td>${m.desc}</td><td>${m.qty}</td><td>${m.unita}</td><td>${m.peso||'—'}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${actionHtml}
+    <div style="height:48px;"></div>`;
+}
+
+async function accettaDdt(id) {
+  try {
+    await api('PUT', `/api/ddts/${id}/accetta`);
+    toast('✓ Spedizione accettata!');
+    openVDet(id);
+  } catch(e) { toast('⚠️ ' + e.message); }
+}
+
+async function marcaTransito(id) {
+  try {
+    await api('PUT', `/api/ddts/${id}/transito`);
+    toast('🚛 DdT marcato in transito!');
+    openVDet(id);
+  } catch(e) { toast('⚠️ ' + e.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+// DESTINATARIO
+// ════════════════════════════════════════════════════════════
+
+async function renderDDash() {
+  const u = UTENTI.destinatario;
+  document.getElementById('d-welcome').textContent = 'Benvenuto, ' + u.nome;
+  setLoading('d-list');
+  document.getElementById('d-stats').innerHTML = '';
+
+  let ddts;
+  try {
+    ddts = await api('GET', `/api/ddts?ruolo=destinatario&nome=${encodeURIComponent(u.nome)}`);
+  } catch(e) {
+    toast('⚠️ Errore caricamento dati'); return;
+  }
+
+  const inArrivo = ddts.filter(d => d.stato === 'in_transito').length;
+  const ricevuti = ddts.filter(d => d.stato === 'consegnato').length;
+
+  document.getElementById('d-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">In arrivo</div><div class="stat-value" style="color:var(--blue)">${inArrivo}</div></div>
+    <div class="stat-card"><div class="stat-label">Da confermare</div><div class="stat-value" style="color:var(--amber)">${inArrivo}</div></div>
+    <div class="stat-card"><div class="stat-label">Ricevuti</div><div class="stat-value" style="color:var(--green)">${ricevuti}</div></div>`;
+
+  if (!ddts.length) {
+    document.getElementById('d-list').innerHTML =
+      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nessuna consegna in arrivo</div><div>Qui appariranno i DdT in transito verso di te.</div></div></td></tr>';
+    return;
+  }
+  document.getElementById('d-list').innerHTML = ddts.map(d => `
+    <tr>
+      <td><span class="tlink" onclick="openDDet('${d.id}')">${d.id}</span></td>
+      <td>${d.mittente.nome}</td>
+      <td>${d.merci.map(m => m.desc).join(', ')}</td>
+      <td>${d.data}</td>
+      <td>${badge(d.stato)}</td>
+      <td><button class="btn btn-sm ${d.stato === 'in_transito' ? 'btn-orange' : ''}" onclick="openDDet('${d.id}')">
+        ${d.stato === 'in_transito' ? 'Conferma' : 'Apri'}
+      </button></td>
+    </tr>`).join('');
+}
+
+async function openDDet(id) {
+  nav('v-d-det');
+  document.getElementById('d-det-body').innerHTML = '<div class="spinner">Caricamento…</div>';
+  let d;
+  try { d = await api('GET', `/api/ddts/${id}`); } catch(e) { toast('⚠️ Errore'); return; }
+
+  let actionHtml = '';
+  if (d.stato === 'in_transito') {
+    actionHtml = `<div class="action-box">
+      <h3>📦 Merce in arrivo</h3>
+      <p>La merce è in consegna da ${d.vettore.nome}. Quando la ricevi e la verifichi, conferma la consegna.</p>
+      <button class="btn btn-green" onclick="confermaConsegna('${d.id}')">✓ Conferma consegna</button>
+    </div>`;
+  } else if (d.stato === 'consegnato') {
+    actionHtml = `<div class="action-box" style="background:var(--green-light);border-color:#a8d175;">
+      <h3>✅ Consegna confermata</h3>
+      <p>Hai confermato la ricezione della merce. Il documento è archiviato e disponibile.</p>
+    </div>`;
+  }
+
+  document.getElementById('d-det-body').innerHTML = `
+    <div class="page-header">
+      <div>
+        <button class="btn-link" onclick="nav('v-d-dash');renderDDash()">← dashboard</button>
+        <div class="page-title" style="margin-top:8px;">${d.id}</div>
+      </div>
+      ${badge(d.stato)}
+    </div>
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-title">Dettagli documento</div>
+        <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
+        <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${d.data}</span></div>
+        <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">Vettore</span><span class="detail-value">${d.vettore.nome}</span></div>
+        <div class="detail-row"><span class="detail-label">Indirizzo consegna</span><span class="detail-value">${d.destinatario.indirizzo||'—'}</span></div>
+        ${d.noteDestinazione ? `<div class="detail-row"><span class="detail-label">Note per te</span><span class="detail-value">${d.noteDestinazione}</span></div>` : ''}
+      </div>
+      <div class="card">
+        <div class="card-title">Tracking spedizione</div>
+        <ul class="timeline">${tlHtml(d.timeline)}</ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Merce in arrivo</div>
+      <table class="merce-detail">
+        <thead><tr><th>Descrizione</th><th>Quantità</th><th>Unità</th><th>Peso</th></tr></thead>
+        <tbody>${d.merci.map(m => `<tr><td>${m.desc}</td><td>${m.qty}</td><td>${m.unita}</td><td>${m.peso||'—'}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${actionHtml}
+    <div style="height:48px;"></div>`;
+}
+
+async function confermaConsegna(id) {
+  try {
+    await api('PUT', `/api/ddts/${id}/consegna`);
+    toast('✅ Consegna confermata! Documento archiviato.');
+    openDDet(id);
+  } catch(e) { toast('⚠️ ' + e.message); }
+}
+</script>
+</body>
+</html>

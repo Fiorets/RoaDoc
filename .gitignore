@@ -1,0 +1,4 @@
+node_modules/
+roadoc.db
+*.db-journal
+.env
