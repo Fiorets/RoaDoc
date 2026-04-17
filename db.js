@@ -1,7 +1,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
+const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data.json';
 
 // ── Carica o inizializza il database JSON ────────────────────
 function load() {
