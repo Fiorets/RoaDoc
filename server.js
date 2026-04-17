@@ -1,6 +1,6 @@
 const express = require('express');
 const path    = require('path');
-const { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, nowItalian } = require('./db');
+const { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, deleteDdt, nowItalian } = require('./db');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -89,6 +89,14 @@ app.put('/api/ddts/:id/transito', (req, res) => {
   tl[3].ts   = nowItalian();
   const updated = updateDdtStato(ddt.id, 'in_transito', tl);
   res.json(updated);
+});
+
+// ── DELETE /api/ddts/:id ─────────────────────────────────────
+app.delete('/api/ddts/:id', (req, res) => {
+  const ddt = getDdtById(req.params.id);
+  if (!ddt) return res.status(404).json({ error: 'DdT non trovato' });
+  deleteDdt(req.params.id);
+  res.json({ ok: true });
 });
 
 // ── PUT /api/ddts/:id/consegna ───────────────────────────────
