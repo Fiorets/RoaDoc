@@ -461,7 +461,7 @@ function setLoading(tbodyId) {
 
 // ── Navigazione ────────────────────────────────────────────
 function nav(id) {
-  document.querySelectorAll('[id^="v-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('#app > [id^="v-"]').forEach(el => el.classList.add('hidden'));
   const el = document.getElementById(id);
   if (el) el.classList.remove('hidden');
   window.scrollTo(0, 0);
