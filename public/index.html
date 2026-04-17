@@ -573,7 +573,10 @@ async function openMDet(id) {
         <button class="btn-link" onclick="nav('v-m-dash');renderMDash()">← dashboard</button>
         <div class="page-title" style="margin-top:8px;">${d.id}</div>
       </div>
-      ${badge(d.stato)}
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${badge(d.stato)}
+        <button class="btn btn-sm" onclick="downloadPdf('${d.id}')">⬇ PDF</button>
+      </div>
     </div>
     <div class="parties-row">
       <div class="party-box" style="background:var(--blue-light);">
@@ -804,7 +807,10 @@ async function openVDet(id) {
         <button class="btn-link" onclick="nav('v-v-dash');renderVDash()">← dashboard</button>
         <div class="page-title" style="margin-top:8px;">${d.id}</div>
       </div>
-      ${badge(d.stato)}
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${badge(d.stato)}
+        <button class="btn btn-sm" onclick="downloadPdf('${d.id}')">⬇ PDF</button>
+      </div>
     </div>
     <div class="detail-grid">
       <div class="card">
@@ -929,7 +935,10 @@ async function openDDet(id) {
         <button class="btn-link" onclick="nav('v-d-dash');renderDDash()">← dashboard</button>
         <div class="page-title" style="margin-top:8px;">${d.id}</div>
       </div>
-      ${badge(d.stato)}
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${badge(d.stato)}
+        <button class="btn btn-sm" onclick="downloadPdf('${d.id}')">⬇ PDF</button>
+      </div>
     </div>
     <div class="detail-grid">
       <div class="card">
@@ -974,6 +983,194 @@ async function confermaConsegna(id) {
     openDDet(id);
   } catch(e) { toast('⚠️ ' + e.message); }
 }
+
+// ════════════════════════════════════════════════════════════
+// PDF
+// ════════════════════════════════════════════════════════════
+
+async function downloadPdf(ddtId) {
+  // Assicura che jsPDF sia caricato
+  if (!window.jspdf) {
+    toast('⏳ Caricamento libreria PDF…');
+    await new Promise(res => setTimeout(res, 1200));
+  }
+  if (!window.jspdf) { toast('⚠️ Libreria PDF non disponibile'); return; }
+
+  let d;
+  try { d = await api('GET', `/api/ddts/${ddtId}`); }
+  catch(e) { toast('⚠️ Errore caricamento dati'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 14;
+  let y = 0;
+
+  // ── Header navy ──────────────────────────────────────────
+  doc.setFillColor(30, 58, 95);
+  doc.rect(0, 0, W, 34, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RoaDoc', M, 14);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Documento di Trasporto digitale', M, 20);
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`N° ${d.id}`, W - M, 13, { align: 'right' });
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  const statoLabel = { attesa_vettore: 'In attesa vettore', accettato: 'Accettato', in_transito: 'In transito', consegnato: 'Consegnato' };
+  doc.text(`Data: ${d.data}  ·  Stato: ${statoLabel[d.stato] || d.stato}`, W - M, 20, { align: 'right' });
+
+  y = 42;
+
+  // ── Tre soggetti ─────────────────────────────────────────
+  const boxW = (W - M * 2 - 8) / 3;
+  const parties = [
+    { label: 'MITTENTE',     bg: [230,241,251], tc: [12,68,124],  data: d.mittente     },
+    { label: 'VETTORE',      bg: [234,243,222], tc: [39,80,10],   data: d.vettore      },
+    { label: 'DESTINATARIO', bg: [250,238,218], tc: [99,56,6],    data: d.destinatario }
+  ];
+  parties.forEach((p, i) => {
+    const x = M + i * (boxW + 4);
+    doc.setFillColor(...p.bg);
+    doc.roundedRect(x, y, boxW, 26, 2, 2, 'F');
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...p.tc);
+    doc.text(p.label, x + 4, y + 6);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(44, 44, 42);
+    doc.text(p.data.nome || '—', x + 4, y + 12, { maxWidth: boxW - 8 });
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(95, 94, 90);
+    if (p.data.piva)      doc.text(`P.IVA: ${p.data.piva}`,  x + 4, y + 18, { maxWidth: boxW - 8 });
+    if (p.data.indirizzo) doc.text(p.data.indirizzo,          x + 4, y + 23, { maxWidth: boxW - 8 });
+  });
+
+  y += 32;
+
+  // ── Tabella merce ─────────────────────────────────────────
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(44, 44, 42);
+  doc.text('Merce', M, y);
+  y += 3;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Descrizione', 'Qtà', 'Unità', 'Peso']],
+    body: d.merci.map(m => [m.desc, String(m.qty), m.unita, m.peso || '—']),
+    theme: 'grid',
+    headStyles: {
+      fillColor: [30, 58, 95], textColor: [255,255,255],
+      fontSize: 8.5, fontStyle: 'bold', cellPadding: 4
+    },
+    bodyStyles: { fontSize: 8.5, cellPadding: 3.5 },
+    columnStyles: {
+      0: { cellWidth: 85 },
+      1: { cellWidth: 20, halign: 'center' },
+      2: { cellWidth: 28, halign: 'center' },
+      3: { cellWidth: 35 }
+    },
+    margin: { left: M, right: M }
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ── Note ──────────────────────────────────────────────────
+  if (d.noteVettore || d.noteDestinazione) {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(44, 44, 42);
+    doc.text('Note', M, y);
+    y += 5;
+
+    if (d.noteVettore) {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(95, 94, 90);
+      doc.text('Per il vettore:', M, y); y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(44, 44, 42);
+      const lv = doc.splitTextToSize(d.noteVettore, W - M * 2);
+      doc.text(lv, M, y); y += lv.length * 4.5 + 2;
+    }
+    if (d.noteDestinazione) {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(95, 94, 90);
+      doc.text('Per il destinatario:', M, y); y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(44, 44, 42);
+      const ld = doc.splitTextToSize(d.noteDestinazione, W - M * 2);
+      doc.text(ld, M, y); y += ld.length * 4.5 + 2;
+    }
+    y += 4;
+  }
+
+  // ── Timeline ──────────────────────────────────────────────
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(44, 44, 42);
+  doc.text('Storico spedizione', M, y);
+  y += 7;
+
+  const firstPending = d.timeline.findIndex(t => !t.done);
+  d.timeline.forEach((t, i) => {
+    // disegna linea verticale di connessione (tranne ultimo)
+    if (i < d.timeline.length - 1) {
+      doc.setDrawColor(211, 209, 199);
+      doc.setLineWidth(0.4);
+      doc.line(M + 3, y + 2, M + 3, y + 10);
+    }
+    // pallino colorato
+    const dotColor = t.done
+      ? [99, 153, 34]
+      : (i === firstPending ? [30, 58, 95] : [211, 209, 199]);
+    doc.setFillColor(...dotColor);
+    doc.circle(M + 3, y - 0.5, 2.2, 'F');
+
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', t.done ? 'bold' : 'normal');
+    doc.setTextColor(44, 44, 42);
+    doc.text(t.label, M + 9, y);
+
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(95, 94, 90);
+    doc.text(t.ts || 'In attesa', M + 9, y + 4);
+    y += 11;
+  });
+
+  // ── Footer ────────────────────────────────────────────────
+  const PH = 297;
+  doc.setDrawColor(211, 209, 199);
+  doc.setLineWidth(0.5);
+  doc.line(M, PH - 14, W - M, PH - 14);
+  doc.setFontSize(7.5);
+  doc.setTextColor(95, 94, 90);
+  doc.setFont('helvetica', 'normal');
+  doc.text('RoaDoc — Documento di Trasporto digitale  ·  roadoc-production.up.railway.app', M, PH - 9);
+  doc.text(`Generato il ${new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric' })}`, W - M, PH - 9, { align: 'right' });
+
+  doc.save(`${d.id}.pdf`);
+  toast('✓ PDF scaricato!');
+}
 </script>
+
+<!-- jsPDF + autoTable (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>
