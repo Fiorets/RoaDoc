@@ -23,10 +23,7 @@ app.get('/api/ddts', (req, res) => {
     } else if (ruolo === 'vettore') {
       all = all.filter(d => d.vettore.nome === nome);
     } else if (ruolo === 'destinatario') {
-      all = all.filter(d =>
-        d.destinatario.nome === nome &&
-        (d.stato === 'in_transito' || d.stato === 'consegnato')
-      );
+      all = all.filter(d => d.destinatario.nome === nome);
     }
   }
 
