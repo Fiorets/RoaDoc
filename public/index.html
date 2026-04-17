@@ -461,7 +461,7 @@ function setLoading(tbodyId) {
 
 // ── Navigazione ────────────────────────────────────────────
 function nav(id) {
-  document.querySelectorAll('#app > [id^="v-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('[id^="v-"]').forEach(el => el.classList.add('hidden'));
   const el = document.getElementById(id);
   if (el) el.classList.remove('hidden');
   window.scrollTo(0, 0);
@@ -866,17 +866,18 @@ async function renderDDash() {
     toast('⚠️ Errore caricamento dati'); return;
   }
 
-  const inArrivo = ddts.filter(d => d.stato === 'in_transito').length;
-  const ricevuti = ddts.filter(d => d.stato === 'consegnato').length;
+  const inAttesa   = ddts.filter(d => d.stato === 'attesa_vettore' || d.stato === 'accettato').length;
+  const inArrivo   = ddts.filter(d => d.stato === 'in_transito').length;
+  const ricevuti   = ddts.filter(d => d.stato === 'consegnato').length;
 
   document.getElementById('d-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Registrati</div><div class="stat-value" style="color:var(--amber)">${inAttesa}</div></div>
     <div class="stat-card"><div class="stat-label">In arrivo</div><div class="stat-value" style="color:var(--blue)">${inArrivo}</div></div>
-    <div class="stat-card"><div class="stat-label">Da confermare</div><div class="stat-value" style="color:var(--amber)">${inArrivo}</div></div>
     <div class="stat-card"><div class="stat-label">Ricevuti</div><div class="stat-value" style="color:var(--green)">${ricevuti}</div></div>`;
 
   if (!ddts.length) {
     document.getElementById('d-list').innerHTML =
-      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nessuna consegna in arrivo</div><div>Qui appariranno i DdT in transito verso di te.</div></div></td></tr>';
+      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nessun documento assegnato</div><div>Qui appariranno tutti i DdT a te destinati.</div></div></td></tr>';
     return;
   }
   document.getElementById('d-list').innerHTML = ddts.map(d => `
@@ -899,7 +900,17 @@ async function openDDet(id) {
   try { d = await api('GET', `/api/ddts/${id}`); } catch(e) { toast('⚠️ Errore'); return; }
 
   let actionHtml = '';
-  if (d.stato === 'in_transito') {
+  if (d.stato === 'attesa_vettore') {
+    actionHtml = `<div class="action-box" style="background:var(--amber-light);border-color:#e8c97a;">
+      <h3>📋 Ordine registrato</h3>
+      <p>${d.mittente.nome} ha creato questo DdT. Il vettore ${d.vettore.nome} deve ancora accettare la spedizione.</p>
+    </div>`;
+  } else if (d.stato === 'accettato') {
+    actionHtml = `<div class="action-box" style="background:var(--blue-light);border-color:#9bc4f0;">
+      <h3>🚛 Spedizione confermata</h3>
+      <p>${d.vettore.nome} ha accettato la spedizione. La merce è in preparazione per la partenza.</p>
+    </div>`;
+  } else if (d.stato === 'in_transito') {
     actionHtml = `<div class="action-box">
       <h3>📦 Merce in arrivo</h3>
       <p>La merce è in consegna da ${d.vettore.nome}. Quando la ricevi e la verifichi, conferma la consegna.</p>
