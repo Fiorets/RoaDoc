@@ -112,6 +112,12 @@ app.put('/api/ddts/:id/consegna', (req, res) => {
   res.json(updated);
 });
 
+// ── GET /api/debug ───────────────────────────────────────────
+app.get('/api/debug', (req, res) => {
+  const all = getAllDdts();
+  res.json({ totale: all.length, ids: all.map(d => ({ id: d.id, vettore: d.vettore.nome, stato: d.stato })) });
+});
+
 // ── Fallback → serve index.html per SPA ─────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
