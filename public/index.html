@@ -621,7 +621,9 @@ async function openMDet(id) {
       ${d.noteVettore ? `<div class="detail-row"><span class="detail-label">Per il vettore</span><span class="detail-value">${d.noteVettore}</span></div>` : ''}
       ${d.noteDestinazione ? `<div class="detail-row"><span class="detail-label">Per il destinatario</span><span class="detail-value">${d.noteDestinazione}</span></div>` : ''}
     </div>` : ''}
-    <div style="height:48px;"></div>`;
+    <div style="display:flex;justify-content:flex-end;padding-bottom:48px;">
+      <button class="btn" style="color:var(--red-text);border-color:var(--red-text);" onclick="deleteDoc('${d.id}')">🗑 Elimina DdT</button>
+    </div>`;
 }
 
 // ── Nuovo DdT ──────────────────────────────────────────────
@@ -942,6 +944,16 @@ async function openDDet(id) {
     </div>
     ${actionHtml}
     <div style="height:48px;"></div>`;
+}
+
+async function deleteDoc(id) {
+  if (!confirm('Sei sicuro di voler eliminare questo DdT? L\'operazione non è reversibile.')) return;
+  try {
+    await api('DELETE', `/api/ddts/${id}`);
+    toast('🗑 DdT eliminato.');
+    renderMDash();
+    nav('v-m-dash');
+  } catch(e) { toast('⚠️ ' + e.message); }
 }
 
 async function confermaConsegna(id) {
