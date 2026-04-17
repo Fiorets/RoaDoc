@@ -1,48 +1,32 @@
-const Database = require('better-sqlite3');
+const fs   = require('fs');
 const path = require('path');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'roadoc.db');
-const db = new Database(DB_PATH);
+const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 
-// ── Schema ──────────────────────────────────────────────────
-db.exec(`
-  CREATE TABLE IF NOT EXISTS ddts (
-    id                TEXT PRIMARY KEY,
-    data              TEXT NOT NULL,
-    mittente          TEXT NOT NULL,
-    vettore           TEXT NOT NULL,
-    destinatario      TEXT NOT NULL,
-    merci             TEXT NOT NULL,
-    stato             TEXT NOT NULL,
-    note_vettore      TEXT DEFAULT '',
-    note_destinazione TEXT DEFAULT '',
-    timeline          TEXT NOT NULL,
-    created_at        TEXT DEFAULT (datetime('now'))
-  )
-`);
-
-// ── Seed dati demo (solo se db vuoto) ───────────────────────
-function nowStr(date, time) {
-  return `${date} ${time}`;
+// ── Carica o inizializza il database JSON ────────────────────
+function load() {
+  if (fs.existsSync(DATA_FILE)) {
+    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  }
+  return { ddts: [] };
 }
 
-const count = db.prepare('SELECT COUNT(*) as c FROM ddts').get().c;
-if (count === 0) {
-  const ins = db.prepare(`
-    INSERT INTO ddts (id, data, mittente, vettore, destinatario, merci, stato, note_vettore, note_destinazione, timeline)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+function save(db) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
+}
 
-  const seedData = [
+// ── Seed dati demo (solo al primo avvio) ─────────────────────
+const db = load();
+if (db.ddts.length === 0) {
+  db.ddts = [
     {
-      id: 'DDT-2025-0001',
-      data: '10/04/2025',
+      id: 'DDT-2025-0001', data: '10/04/2025',
       mittente:     { nome: 'Acme Ceramiche Srl',  piva: 'IT02345678901', indirizzo: 'Via Roma 15, 41100 Modena' },
       vettore:      { nome: 'Trans Adriatica Srl', piva: 'IT09876543210' },
       destinatario: { nome: 'Bayern Handel GmbH',  paese: 'Germania', indirizzo: 'Müllerstr. 42, 80469 München' },
       merci:        [{ desc: 'Piastrelle ceramica 60×60', qty: 24, unita: 'colli', peso: '480 kg' }],
-      stato:        'in_transito',
-      noteVettore:  'Fragile — maneggiare con cura',
+      stato: 'in_transito',
+      noteVettore: 'Fragile — maneggiare con cura',
       noteDestinazione: 'Consegnare al magazzino B',
       timeline: [
         { label: 'Documento creato',       ts: '10/04/2025 08:30', done: true  },
@@ -50,63 +34,46 @@ if (count === 0) {
         { label: 'Accettato dal vettore',  ts: '10/04/2025 09:15', done: true  },
         { label: 'Partenza — In transito', ts: '10/04/2025 10:00', done: true  },
         { label: 'Consegna confermata',    ts: null,               done: false }
-      ]
+      ],
+      created_at: '2025-04-10T08:30:00.000Z'
     },
     {
-      id: 'DDT-2025-0002',
-      data: '12/04/2025',
+      id: 'DDT-2025-0002', data: '12/04/2025',
       mittente:     { nome: 'Acme Ceramiche Srl',  piva: 'IT02345678901', indirizzo: 'Via Roma 15, 41100 Modena' },
       vettore:      { nome: 'Trans Adriatica Srl', piva: 'IT09876543210' },
       destinatario: { nome: 'Müller GmbH',          paese: 'Germania', indirizzo: 'Hauptstr. 12, 10115 Berlin' },
       merci:        [{ desc: 'Maioliche decorate', qty: 15, unita: 'colli', peso: '210 kg' }],
-      stato:        'attesa_vettore',
-      noteVettore:  '',
-      noteDestinazione: '',
+      stato: 'attesa_vettore',
+      noteVettore: '', noteDestinazione: '',
       timeline: [
         { label: 'Documento creato',       ts: '12/04/2025 14:20', done: true  },
         { label: 'Inviato a vettore',      ts: '12/04/2025 14:21', done: true  },
         { label: 'Accettato dal vettore',  ts: null,               done: false },
         { label: 'Partenza — In transito', ts: null,               done: false },
         { label: 'Consegna confermata',    ts: null,               done: false }
-      ]
+      ],
+      created_at: '2025-04-12T14:20:00.000Z'
     },
     {
-      id: 'DDT-2025-0003',
-      data: '05/04/2025',
+      id: 'DDT-2025-0003', data: '05/04/2025',
       mittente:     { nome: 'Acme Ceramiche Srl',  piva: 'IT02345678901', indirizzo: 'Via Roma 15, 41100 Modena' },
       vettore:      { nome: 'Adriatic Cargo Srl',  piva: 'IT11223344556' },
       destinatario: { nome: 'Bayern Handel GmbH',  paese: 'Austria', indirizzo: 'Ringstraße 4, 1010 Wien' },
       merci:        [{ desc: 'Ceramiche da pavimento', qty: 30, unita: 'colli', peso: '620 kg' }],
-      stato:        'consegnato',
-      noteVettore:  '',
-      noteDestinazione: 'Disponibile dal lunedì mattina',
+      stato: 'consegnato',
+      noteVettore: '', noteDestinazione: 'Disponibile dal lunedì mattina',
       timeline: [
         { label: 'Documento creato',       ts: '05/04/2025 07:00', done: true },
         { label: 'Inviato a vettore',      ts: '05/04/2025 07:01', done: true },
         { label: 'Accettato dal vettore',  ts: '05/04/2025 07:45', done: true },
         { label: 'Partenza — In transito', ts: '05/04/2025 09:00', done: true },
         { label: 'Consegna confermata',    ts: '07/04/2025 11:30', done: true }
-      ]
+      ],
+      created_at: '2025-04-05T07:00:00.000Z'
     }
   ];
-
-  const insertMany = db.transaction((rows) => {
-    for (const d of rows) {
-      ins.run(
-        d.id, d.data,
-        JSON.stringify(d.mittente),
-        JSON.stringify(d.vettore),
-        JSON.stringify(d.destinatario),
-        JSON.stringify(d.merci),
-        d.stato,
-        d.noteVettore,
-        d.noteDestinazione,
-        JSON.stringify(d.timeline)
-      );
-    }
-  });
-  insertMany(seedData);
-  console.log('✓ Dati demo inseriti nel database');
+  save(db);
+  console.log('✓ Dati demo inizializzati');
 }
 
 // ── Helper: timestamp italiano ───────────────────────────────
@@ -116,67 +83,55 @@ function nowItalian() {
          d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ── Helper: parse riga db → oggetto ─────────────────────────
-function parseRow(row) {
-  return {
-    id:               row.id,
-    data:             row.data,
-    mittente:         JSON.parse(row.mittente),
-    vettore:          JSON.parse(row.vettore),
-    destinatario:     JSON.parse(row.destinatario),
-    merci:            JSON.parse(row.merci),
-    stato:            row.stato,
-    noteVettore:      row.note_vettore,
-    noteDestinazione: row.note_destinazione,
-    timeline:         JSON.parse(row.timeline),
-    created_at:       row.created_at
-  };
-}
-
 // ── Queries ──────────────────────────────────────────────────
 function getAllDdts() {
-  return db.prepare('SELECT * FROM ddts ORDER BY created_at DESC').all().map(parseRow);
+  return load().ddts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
 function getDdtById(id) {
-  const row = db.prepare('SELECT * FROM ddts WHERE id = ?').get(id);
-  return row ? parseRow(row) : null;
+  return load().ddts.find(d => d.id === id) || null;
 }
 
 function getNextId() {
   const year = new Date().getFullYear();
-  const last = db.prepare(`SELECT id FROM ddts WHERE id LIKE 'DDT-${year}-%' ORDER BY id DESC LIMIT 1`).get();
-  const seq = last ? parseInt(last.id.split('-')[2]) + 1 : 1;
-  return `DDT-${year}-${String(seq).padStart(4, '0')}`;
+  const db   = load();
+  const same = db.ddts.filter(d => d.id.startsWith(`DDT-${year}-`));
+  const max  = same.reduce((m, d) => {
+    const n = parseInt(d.id.split('-')[2]);
+    return n > m ? n : m;
+  }, 0);
+  return `DDT-${year}-${String(max + 1).padStart(4, '0')}`;
 }
 
 function createDdt(data) {
-  const id = getNextId();
-  db.prepare(`
-    INSERT INTO ddts (id, data, mittente, vettore, destinatario, merci, stato, note_vettore, note_destinazione, timeline)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  const db  = load();
+  const id  = getNextId();
+  const ddt = {
     id,
-    data.data,
-    JSON.stringify(data.mittente),
-    JSON.stringify(data.vettore),
-    JSON.stringify(data.destinatario),
-    JSON.stringify(data.merci),
-    'attesa_vettore',
-    data.noteVettore || '',
-    data.noteDestinazione || '',
-    JSON.stringify(data.timeline)
-  );
-  return getDdtById(id);
+    data:             data.data,
+    mittente:         data.mittente,
+    vettore:          data.vettore,
+    destinatario:     data.destinatario,
+    merci:            data.merci,
+    stato:            'attesa_vettore',
+    noteVettore:      data.noteVettore      || '',
+    noteDestinazione: data.noteDestinazione || '',
+    timeline:         data.timeline,
+    created_at:       new Date().toISOString()
+  };
+  db.ddts.unshift(ddt);
+  save(db);
+  return ddt;
 }
 
 function updateDdtStato(id, stato, timeline) {
-  db.prepare('UPDATE ddts SET stato = ?, timeline = ? WHERE id = ?').run(
-    stato,
-    JSON.stringify(timeline),
-    id
-  );
-  return getDdtById(id);
+  const db  = load();
+  const idx = db.ddts.findIndex(d => d.id === id);
+  if (idx === -1) return null;
+  db.ddts[idx].stato    = stato;
+  db.ddts[idx].timeline = timeline;
+  save(db);
+  return db.ddts[idx];
 }
 
 module.exports = { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, nowItalian };
