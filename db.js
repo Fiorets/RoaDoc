@@ -134,4 +134,10 @@ function updateDdtStato(id, stato, timeline) {
   return db.ddts[idx];
 }
 
-module.exports = { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, nowItalian };
+function deleteDdt(id) {
+  const db = load();
+  db.ddts = db.ddts.filter(d => d.id !== id);
+  save(db);
+}
+
+module.exports = { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, deleteDdt, nowItalian };
