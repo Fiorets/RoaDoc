@@ -272,11 +272,10 @@ tr:hover td { background:var(--gray-50); }
           <input class="search-input" id="m-search" placeholder="🔍  Cerca azienda…" oninput="setSearch('mittente',this.value)">
           <select class="date-select" id="m-date" onchange="setDate('mittente',this.value)">
             <option value="">Tutte le date</option>
+            <option value="oggi">Oggi</option>
+            <option value="settimana">Questa settimana</option>
+            <option value="mese">Questo mese</option>
             <option value="y2026">Anno 2026</option>
-            <option value="y2025">Anno 2025</option>
-            <option value="y2024">Anno 2024</option>
-            <option value="30">Ultimi 30 giorni</option>
-            <option value="90">Ultimi 3 mesi</option>
           </select>
           <span class="result-count" id="m-count"></span>
         </div>
@@ -379,11 +378,10 @@ tr:hover td { background:var(--gray-50); }
           <input class="search-input" id="v-search" placeholder="🔍  Cerca azienda…" oninput="setSearch('vettore',this.value)">
           <select class="date-select" id="v-date" onchange="setDate('vettore',this.value)">
             <option value="">Tutte le date</option>
+            <option value="oggi">Oggi</option>
+            <option value="settimana">Questa settimana</option>
+            <option value="mese">Questo mese</option>
             <option value="y2026">Anno 2026</option>
-            <option value="y2025">Anno 2025</option>
-            <option value="y2024">Anno 2024</option>
-            <option value="30">Ultimi 30 giorni</option>
-            <option value="90">Ultimi 3 mesi</option>
           </select>
           <span class="result-count" id="v-count"></span>
         </div>
@@ -423,11 +421,10 @@ tr:hover td { background:var(--gray-50); }
           <input class="search-input" id="d-search" placeholder="🔍  Cerca azienda…" oninput="setSearch('destinatario',this.value)">
           <select class="date-select" id="d-date" onchange="setDate('destinatario',this.value)">
             <option value="">Tutte le date</option>
+            <option value="oggi">Oggi</option>
+            <option value="settimana">Questa settimana</option>
+            <option value="mese">Questo mese</option>
             <option value="y2026">Anno 2026</option>
-            <option value="y2025">Anno 2025</option>
-            <option value="y2024">Anno 2024</option>
-            <option value="30">Ultimi 30 giorni</option>
-            <option value="90">Ultimi 3 mesi</option>
           </select>
           <span class="result-count" id="d-count"></span>
         </div>
@@ -559,10 +556,15 @@ function parseDateIT(s) {
 
 function applyFilters(ddts, role) {
   const { tab, search, date } = filterState[role];
+  const now = new Date();
+  // Inizio settimana corrente (lunedì)
+  const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - dow); startOfWeek.setHours(0,0,0,0);
+
   return ddts.filter(d => {
     // Tab
-    if (tab === 'attivi'    && d.stato === 'consegnato') return false;
-    if (tab === 'archiviati' && d.stato !== 'consegnato') return false;
+    if (tab === 'attivi'     && d.stato === 'consegnato')  return false;
+    if (tab === 'archiviati' && d.stato !== 'consegnato')  return false;
     // Ricerca
     if (search) {
       const q = search.toLowerCase();
@@ -574,11 +576,15 @@ function applyFilters(ddts, role) {
     if (date) {
       const dt = parseDateIT(d.data);
       if (dt) {
-        const diffDays = (Date.now() - dt) / 86400000;
-        if (date === '30'    && diffDays > 30)  return false;
-        if (date === '90'    && diffDays > 90)  return false;
-        if (date === 'y2024' && dt.getFullYear() !== 2024) return false;
-        if (date === 'y2025' && dt.getFullYear() !== 2025) return false;
+        if (date === 'oggi') {
+          if (dt.getDate()  !== now.getDate()  ||
+              dt.getMonth() !== now.getMonth() ||
+              dt.getFullYear() !== now.getFullYear()) return false;
+        }
+        if (date === 'settimana' && dt < startOfWeek) return false;
+        if (date === 'mese') {
+          if (dt.getMonth() !== now.getMonth() || dt.getFullYear() !== now.getFullYear()) return false;
+        }
         if (date === 'y2026' && dt.getFullYear() !== 2026) return false;
       }
     }
