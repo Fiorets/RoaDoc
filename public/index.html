@@ -72,12 +72,25 @@ tr:hover td { background:var(--gray-50); }
 .tlink:hover { text-decoration:underline; }
 
 /* ── Page header ── */
-.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; }
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; }
 .page-title  { font-size:20px; font-weight:600; }
 .page-subtitle { font-size:14px; color:var(--gray-600); margin-top:2px; }
 
+/* ── Filter bar ── */
+.filter-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.tab-group { display:flex; background:var(--gray-100); border-radius:var(--radius); padding:3px; gap:2px; }
+.tab { padding:6px 16px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; border:none; background:transparent; color:var(--gray-600); transition:all .14s; white-space:nowrap; }
+.tab.active { background:#fff; color:var(--gray-800); box-shadow:0 1px 3px rgba(0,0,0,.1); }
+.tab:hover:not(.active) { color:var(--gray-800); }
+.filter-right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.search-input { padding:7px 11px; border:1px solid var(--border); border-radius:var(--radius); font-size:13px; width:195px; background:#fff; font-family:var(--font); }
+.search-input:focus { outline:none; border-color:var(--navy); }
+.date-select { padding:7px 11px; border:1px solid var(--border); border-radius:var(--radius); font-size:13px; background:#fff; cursor:pointer; font-family:var(--font); }
+.date-select:focus { outline:none; border-color:var(--navy); }
+.result-count { font-size:12px; color:var(--gray-600); white-space:nowrap; }
+
 /* ── Stats ── */
-.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
 .stat-card  { background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 20px; }
 .stat-label { font-size:12px; color:var(--gray-600); margin-bottom:4px; }
 .stat-value { font-size:28px; font-weight:700; }
@@ -124,6 +137,12 @@ tr:hover td { background:var(--gray-50); }
 .action-box h3 { font-size:16px; margin-bottom:8px; }
 .action-box p  { color:var(--gray-600); font-size:14px; margin-bottom:18px; }
 
+/* ── Codice di consegna (destinatario) ── */
+.codice-box { background:var(--navy); border-radius:var(--radius-lg); padding:28px 24px; text-align:center; margin-bottom:16px; }
+.codice-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.55); margin-bottom:14px; }
+.codice-digits { font-size:52px; font-weight:700; letter-spacing:10px; color:#fff; font-variant-numeric:tabular-nums; line-height:1; }
+.codice-hint { font-size:13px; color:rgba(255,255,255,.6); margin-top:14px; }
+
 /* ── Landing ── */
 #landing { min-height:100vh; background:var(--navy); display:flex; flex-direction:column; }
 .landing-nav  { padding:20px 40px; display:flex; align-items:center; justify-content:space-between; }
@@ -168,6 +187,10 @@ tr:hover td { background:var(--gray-50); }
 .spinner { text-align:center; padding:48px 20px; color:var(--gray-600); font-size:14px; }
 .spinner::before { content:""; display:block; width:32px; height:32px; border:3px solid var(--gray-200); border-top-color:var(--navy); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 12px; }
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── Codice input (vettore) ── */
+.codice-input { text-align:center; font-size:22px; letter-spacing:6px; width:150px; padding:10px 8px; border:2px solid var(--border); border-radius:var(--radius); font-family:monospace; color:var(--gray-800); }
+.codice-input:focus { outline:none; border-color:var(--navy); }
 </style>
 </head>
 <body>
@@ -229,7 +252,7 @@ tr:hover td { background:var(--gray-50); }
     </div>
   </div>
 
-  <!-- MITTENTE DASHBOARD -->
+  <!-- ══ MITTENTE DASHBOARD ══ -->
   <div id="v-m-dash" class="hidden">
     <div class="page">
       <div class="page-header">
@@ -238,6 +261,25 @@ tr:hover td { background:var(--gray-50); }
           <div class="page-subtitle" id="m-welcome"></div>
         </div>
         <button class="btn btn-orange" onclick="navNuovoDdt()">＋ Nuovo DdT</button>
+      </div>
+      <div class="filter-bar">
+        <div class="tab-group">
+          <button class="tab active" onclick="setTab('mittente','tutti',this)">Tutti</button>
+          <button class="tab" onclick="setTab('mittente','attivi',this)">Attivi</button>
+          <button class="tab" onclick="setTab('mittente','archiviati',this)">Archiviati</button>
+        </div>
+        <div class="filter-right">
+          <input class="search-input" id="m-search" placeholder="🔍  Cerca azienda…" oninput="setSearch('mittente',this.value)">
+          <select class="date-select" id="m-date" onchange="setDate('mittente',this.value)">
+            <option value="">Tutte le date</option>
+            <option value="y2026">Anno 2026</option>
+            <option value="y2025">Anno 2025</option>
+            <option value="y2024">Anno 2024</option>
+            <option value="30">Ultimi 30 giorni</option>
+            <option value="90">Ultimi 3 mesi</option>
+          </select>
+          <span class="result-count" id="m-count"></span>
+        </div>
       </div>
       <div class="stats-row" id="m-stats"></div>
       <div class="card">
@@ -250,7 +292,7 @@ tr:hover td { background:var(--gray-50); }
     </div>
   </div>
 
-  <!-- MITTENTE NUOVO DdT -->
+  <!-- ══ MITTENTE NUOVO DdT ══ -->
   <div id="v-m-nuovo" class="hidden">
     <div class="page" style="max-width:740px;">
       <div class="page-header">
@@ -313,18 +355,37 @@ tr:hover td { background:var(--gray-50); }
     </div>
   </div>
 
-  <!-- MITTENTE DETTAGLIO -->
+  <!-- ══ MITTENTE DETTAGLIO ══ -->
   <div id="v-m-det" class="hidden">
     <div class="page" id="m-det-body"></div>
   </div>
 
-  <!-- VETTORE DASHBOARD -->
+  <!-- ══ VETTORE DASHBOARD ══ -->
   <div id="v-v-dash" class="hidden">
     <div class="page">
       <div class="page-header">
         <div>
           <div class="page-title">Dashboard vettore</div>
           <div class="page-subtitle" id="v-welcome"></div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="tab-group">
+          <button class="tab active" onclick="setTab('vettore','tutti',this)">Tutti</button>
+          <button class="tab" onclick="setTab('vettore','attivi',this)">Attivi</button>
+          <button class="tab" onclick="setTab('vettore','archiviati',this)">Archiviati</button>
+        </div>
+        <div class="filter-right">
+          <input class="search-input" id="v-search" placeholder="🔍  Cerca azienda…" oninput="setSearch('vettore',this.value)">
+          <select class="date-select" id="v-date" onchange="setDate('vettore',this.value)">
+            <option value="">Tutte le date</option>
+            <option value="y2026">Anno 2026</option>
+            <option value="y2025">Anno 2025</option>
+            <option value="y2024">Anno 2024</option>
+            <option value="30">Ultimi 30 giorni</option>
+            <option value="90">Ultimi 3 mesi</option>
+          </select>
+          <span class="result-count" id="v-count"></span>
         </div>
       </div>
       <div class="stats-row" id="v-stats"></div>
@@ -338,18 +399,37 @@ tr:hover td { background:var(--gray-50); }
     </div>
   </div>
 
-  <!-- VETTORE DETTAGLIO -->
+  <!-- ══ VETTORE DETTAGLIO ══ -->
   <div id="v-v-det" class="hidden">
     <div class="page" id="v-det-body"></div>
   </div>
 
-  <!-- DESTINATARIO DASHBOARD -->
+  <!-- ══ DESTINATARIO DASHBOARD ══ -->
   <div id="v-d-dash" class="hidden">
     <div class="page">
       <div class="page-header">
         <div>
           <div class="page-title">Ricezione merci</div>
           <div class="page-subtitle" id="d-welcome"></div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="tab-group">
+          <button class="tab active" onclick="setTab('destinatario','tutti',this)">Tutti</button>
+          <button class="tab" onclick="setTab('destinatario','attivi',this)">In arrivo</button>
+          <button class="tab" onclick="setTab('destinatario','archiviati',this)">Ricevuti</button>
+        </div>
+        <div class="filter-right">
+          <input class="search-input" id="d-search" placeholder="🔍  Cerca azienda…" oninput="setSearch('destinatario',this.value)">
+          <select class="date-select" id="d-date" onchange="setDate('destinatario',this.value)">
+            <option value="">Tutte le date</option>
+            <option value="y2026">Anno 2026</option>
+            <option value="y2025">Anno 2025</option>
+            <option value="y2024">Anno 2024</option>
+            <option value="30">Ultimi 30 giorni</option>
+            <option value="90">Ultimi 3 mesi</option>
+          </select>
+          <span class="result-count" id="d-count"></span>
         </div>
       </div>
       <div class="stats-row" id="d-stats"></div>
@@ -363,7 +443,7 @@ tr:hover td { background:var(--gray-50); }
     </div>
   </div>
 
-  <!-- DESTINATARIO DETTAGLIO -->
+  <!-- ══ DESTINATARIO DETTAGLIO ══ -->
   <div id="v-d-det" class="hidden">
     <div class="page" id="d-det-body"></div>
   </div>
@@ -376,6 +456,16 @@ tr:hover td { background:var(--gray-50); }
 let currentRole  = null;
 let selectedRole = null;
 let merceRowCount = 0;
+
+// Cache dati per filtri client-side
+const rawDdts = { mittente: [], vettore: [], destinatario: [] };
+
+// Stato filtri per ogni ruolo
+const filterState = {
+  mittente:     { tab: 'tutti', search: '', date: '' },
+  vettore:      { tab: 'tutti', search: '', date: '' },
+  destinatario: { tab: 'tutti', search: '', date: '' }
+};
 
 // ── Profili utente demo ────────────────────────────────────
 const UTENTI = {
@@ -459,6 +549,72 @@ function setLoading(tbodyId) {
     '<tr><td colspan="6"><div class="spinner">Caricamento…</div></td></tr>';
 }
 
+// ── Filtri ─────────────────────────────────────────────────
+function parseDateIT(s) {
+  if (!s) return null;
+  const p = s.split('/');
+  if (p.length !== 3) return null;
+  return new Date(+p[2], +p[1] - 1, +p[0]);
+}
+
+function applyFilters(ddts, role) {
+  const { tab, search, date } = filterState[role];
+  return ddts.filter(d => {
+    // Tab
+    if (tab === 'attivi'    && d.stato === 'consegnato') return false;
+    if (tab === 'archiviati' && d.stato !== 'consegnato') return false;
+    // Ricerca
+    if (search) {
+      const q = search.toLowerCase();
+      const hit = [d.mittente?.nome, d.vettore?.nome, d.destinatario?.nome]
+        .some(n => n && n.toLowerCase().includes(q));
+      if (!hit) return false;
+    }
+    // Date
+    if (date) {
+      const dt = parseDateIT(d.data);
+      if (dt) {
+        const diffDays = (Date.now() - dt) / 86400000;
+        if (date === '30'    && diffDays > 30)  return false;
+        if (date === '90'    && diffDays > 90)  return false;
+        if (date === 'y2024' && dt.getFullYear() !== 2024) return false;
+        if (date === 'y2025' && dt.getFullYear() !== 2025) return false;
+        if (date === 'y2026' && dt.getFullYear() !== 2026) return false;
+      }
+    }
+    return true;
+  });
+}
+
+function setTab(role, tab, el) {
+  filterState[role].tab = tab;
+  el.closest('.tab-group').querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  if (role === 'mittente')     renderMList();
+  else if (role === 'vettore') renderVList();
+  else                         renderDList();
+}
+
+function setSearch(role, val) {
+  filterState[role].search = val;
+  if (role === 'mittente')     renderMList();
+  else if (role === 'vettore') renderVList();
+  else                         renderDList();
+}
+
+function setDate(role, val) {
+  filterState[role].date = val;
+  if (role === 'mittente')     renderMList();
+  else if (role === 'vettore') renderVList();
+  else                         renderDList();
+}
+
+function updateCount(countId, shown, total) {
+  const el = document.getElementById(countId);
+  if (!el) return;
+  el.textContent = shown === total ? `${total} doc.` : `${shown} di ${total}`;
+}
+
 // ── Navigazione ────────────────────────────────────────────
 function nav(id) {
   document.querySelectorAll('#app > [id^="v-"]').forEach(el => el.classList.add('hidden'));
@@ -525,28 +681,36 @@ async function renderMDash() {
   setLoading('m-list');
   document.getElementById('m-stats').innerHTML = '';
 
-  let ddts;
   try {
-    ddts = await api('GET', `/api/ddts?ruolo=mittente&nome=${encodeURIComponent(u.nome)}`);
+    rawDdts.mittente = await api('GET', `/api/ddts?ruolo=mittente&nome=${encodeURIComponent(u.nome)}`);
   } catch(e) {
     toast('⚠️ Errore caricamento dati'); return;
   }
 
-  const inAttesa   = ddts.filter(d => d.stato === 'attesa_vettore').length;
-  const inTransito = ddts.filter(d => d.stato === 'in_transito' || d.stato === 'accettato').length;
-  const consegnati = ddts.filter(d => d.stato === 'consegnato').length;
+  const inAttesa   = rawDdts.mittente.filter(d => d.stato === 'attesa_vettore').length;
+  const inTransito = rawDdts.mittente.filter(d => d.stato === 'in_transito' || d.stato === 'accettato').length;
+  const consegnati = rawDdts.mittente.filter(d => d.stato === 'consegnato').length;
 
   document.getElementById('m-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">In attesa vettore</div><div class="stat-value" style="color:var(--amber)">${inAttesa}</div></div>
     <div class="stat-card"><div class="stat-label">In transito</div><div class="stat-value" style="color:var(--blue)">${inTransito}</div></div>
     <div class="stat-card"><div class="stat-label">Consegnati</div><div class="stat-value" style="color:var(--green)">${consegnati}</div></div>`;
 
-  if (!ddts.length) {
-    document.getElementById('m-list').innerHTML =
-      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Nessun DdT ancora</div><div>Crea il tuo primo documento di trasporto!</div></div></td></tr>';
+  renderMList();
+}
+
+function renderMList() {
+  const filtered = applyFilters(rawDdts.mittente, 'mittente');
+  updateCount('m-count', filtered.length, rawDdts.mittente.length);
+
+  if (!filtered.length) {
+    const msg = rawDdts.mittente.length
+      ? '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nessun risultato</div><div>Prova a cambiare i filtri di ricerca.</div></div>'
+      : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Nessun DdT ancora</div><div>Crea il tuo primo documento di trasporto!</div></div>';
+    document.getElementById('m-list').innerHTML = `<tr><td colspan="6">${msg}</td></tr>`;
     return;
   }
-  document.getElementById('m-list').innerHTML = ddts.map(d => `
+  document.getElementById('m-list').innerHTML = filtered.map(d => `
     <tr>
       <td><span class="tlink" onclick="openMDet('${d.id}')">${d.id}</span></td>
       <td>${d.destinatario.nome}</td>
@@ -651,7 +815,6 @@ async function navNuovoDdt() {
   addMerceRow();
   nav('v-m-nuovo');
 
-  // Precarica il prossimo ID
   try {
     const { id } = await api('GET', '/api/ddts/next-id');
     document.getElementById('f-num').value = id;
@@ -736,28 +899,36 @@ async function renderVDash() {
   setLoading('v-list');
   document.getElementById('v-stats').innerHTML = '';
 
-  let ddts;
   try {
-    ddts = await api('GET', `/api/ddts?ruolo=vettore&nome=${encodeURIComponent(u.nome)}`);
+    rawDdts.vettore = await api('GET', `/api/ddts?ruolo=vettore&nome=${encodeURIComponent(u.nome)}`);
   } catch(e) {
     toast('⚠️ Errore caricamento dati'); return;
   }
 
-  const daAcc   = ddts.filter(d => d.stato === 'attesa_vettore').length;
-  const acc     = ddts.filter(d => d.stato === 'accettato').length;
-  const transit = ddts.filter(d => d.stato === 'in_transito').length;
+  const daAcc   = rawDdts.vettore.filter(d => d.stato === 'attesa_vettore').length;
+  const acc     = rawDdts.vettore.filter(d => d.stato === 'accettato').length;
+  const transit = rawDdts.vettore.filter(d => d.stato === 'in_transito').length;
 
   document.getElementById('v-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">Da accettare</div><div class="stat-value" style="color:var(--amber)">${daAcc}</div></div>
     <div class="stat-card"><div class="stat-label">Accettati</div><div class="stat-value" style="color:var(--blue)">${acc}</div></div>
     <div class="stat-card"><div class="stat-label">In transito</div><div class="stat-value" style="color:var(--navy)">${transit}</div></div>`;
 
-  if (!ddts.length) {
-    document.getElementById('v-list').innerHTML =
-      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">🚛</div><div class="empty-title">Nessuna spedizione assegnata</div></div></td></tr>';
+  renderVList();
+}
+
+function renderVList() {
+  const filtered = applyFilters(rawDdts.vettore, 'vettore');
+  updateCount('v-count', filtered.length, rawDdts.vettore.length);
+
+  if (!filtered.length) {
+    const msg = rawDdts.vettore.length
+      ? '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nessun risultato</div><div>Prova a cambiare i filtri di ricerca.</div></div>'
+      : '<div class="empty"><div class="empty-icon">🚛</div><div class="empty-title">Nessuna spedizione assegnata</div></div>';
+    document.getElementById('v-list').innerHTML = `<tr><td colspan="6">${msg}</td></tr>`;
     return;
   }
-  document.getElementById('v-list').innerHTML = ddts.map(d => `
+  document.getElementById('v-list').innerHTML = filtered.map(d => `
     <tr>
       <td><span class="tlink" onclick="openVDet('${d.id}')">${d.id}</span></td>
       <td>${d.mittente.nome}</td>
@@ -790,10 +961,24 @@ async function openVDet(id) {
       <button class="btn btn-orange" onclick="marcaTransito('${d.id}')">🚛 Marca in transito</button>
     </div>`;
   } else if (d.stato === 'in_transito') {
-    actionHtml = `<div class="action-box" style="background:var(--blue-light);border-color:#9bc4f0;">
-      <h3>🚛 Spedizione in corso</h3>
-      <p>Il DdT è in transito. In attesa della conferma di consegna dal destinatario.</p>
-    </div>`;
+    if (d.codice_consegna) {
+      // Codice già generato: mostra l'input per inserirlo
+      actionHtml = `<div class="action-box">
+        <h3>🔑 Inserisci il codice di consegna</h3>
+        <p>Chiedi al destinatario il codice a 6 cifre mostrato sul suo schermo e inseriscilo qui per confermare la consegna.</p>
+        <div style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;">
+          <input class="codice-input" type="text" id="codice-input-${d.id}" maxlength="6" placeholder="000000" inputmode="numeric">
+          <button class="btn btn-primary" onclick="confermaConsegna('${d.id}')">✓ Conferma consegna</button>
+        </div>
+      </div>`;
+    } else {
+      // Codice non ancora generato: avvia la procedura
+      actionHtml = `<div class="action-box">
+        <h3>📍 Sei arrivato a destinazione?</h3>
+        <p>Quando sei dal destinatario, avvia la conferma. Verrà generato un codice univoco che il destinatario ti mostrerà.</p>
+        <button class="btn btn-primary" onclick="avviaConsegna('${d.id}')">📲 Sono arrivato — avvia conferma</button>
+      </div>`;
+    }
   } else if (d.stato === 'consegnato') {
     actionHtml = `<div class="action-box" style="background:var(--green-light);border-color:#a8d175;">
       <h3>✅ Consegna completata</h3>
@@ -855,6 +1040,26 @@ async function marcaTransito(id) {
   } catch(e) { toast('⚠️ ' + e.message); }
 }
 
+async function avviaConsegna(id) {
+  try {
+    await api('PUT', `/api/ddts/${id}/avvia-consegna`);
+    toast('📲 Codice generato. Chiedi al destinatario di aprire il suo schermo.');
+    openVDet(id);
+  } catch(e) { toast('⚠️ ' + e.message); }
+}
+
+async function confermaConsegna(id) {
+  const input = document.getElementById('codice-input-' + id);
+  const codice = input ? input.value.trim() : '';
+  if (codice.length !== 6) { toast('⚠️ Il codice deve essere di 6 cifre'); return; }
+  try {
+    await api('PUT', `/api/ddts/${id}/consegna`, { codice });
+    toast('✅ Consegna confermata!');
+    openVDet(id);
+    renderVDash();
+  } catch(e) { toast('⚠️ ' + e.message); }
+}
+
 // ════════════════════════════════════════════════════════════
 // DESTINATARIO
 // ════════════════════════════════════════════════════════════
@@ -865,36 +1070,44 @@ async function renderDDash() {
   setLoading('d-list');
   document.getElementById('d-stats').innerHTML = '';
 
-  let ddts;
   try {
-    ddts = await api('GET', `/api/ddts?ruolo=destinatario&nome=${encodeURIComponent(u.nome)}`);
+    rawDdts.destinatario = await api('GET', `/api/ddts?ruolo=destinatario&nome=${encodeURIComponent(u.nome)}`);
   } catch(e) {
     toast('⚠️ Errore caricamento dati'); return;
   }
 
-  const inAttesa   = ddts.filter(d => d.stato === 'attesa_vettore' || d.stato === 'accettato').length;
-  const inArrivo   = ddts.filter(d => d.stato === 'in_transito').length;
-  const ricevuti   = ddts.filter(d => d.stato === 'consegnato').length;
+  const inAttesa = rawDdts.destinatario.filter(d => d.stato === 'attesa_vettore' || d.stato === 'accettato').length;
+  const inArrivo = rawDdts.destinatario.filter(d => d.stato === 'in_transito').length;
+  const ricevuti = rawDdts.destinatario.filter(d => d.stato === 'consegnato').length;
 
   document.getElementById('d-stats').innerHTML = `
     <div class="stat-card"><div class="stat-label">Registrati</div><div class="stat-value" style="color:var(--amber)">${inAttesa}</div></div>
     <div class="stat-card"><div class="stat-label">In arrivo</div><div class="stat-value" style="color:var(--blue)">${inArrivo}</div></div>
     <div class="stat-card"><div class="stat-label">Ricevuti</div><div class="stat-value" style="color:var(--green)">${ricevuti}</div></div>`;
 
-  if (!ddts.length) {
-    document.getElementById('d-list').innerHTML =
-      '<tr><td colspan="6"><div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nessun documento assegnato</div><div>Qui appariranno tutti i DdT a te destinati.</div></div></td></tr>';
+  renderDList();
+}
+
+function renderDList() {
+  const filtered = applyFilters(rawDdts.destinatario, 'destinatario');
+  updateCount('d-count', filtered.length, rawDdts.destinatario.length);
+
+  if (!filtered.length) {
+    const msg = rawDdts.destinatario.length
+      ? '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nessun risultato</div><div>Prova a cambiare i filtri di ricerca.</div></div>'
+      : '<div class="empty"><div class="empty-icon">📦</div><div class="empty-title">Nessun documento assegnato</div><div>Qui appariranno tutti i DdT a te destinati.</div></div>';
+    document.getElementById('d-list').innerHTML = `<tr><td colspan="6">${msg}</td></tr>`;
     return;
   }
-  document.getElementById('d-list').innerHTML = ddts.map(d => `
+  document.getElementById('d-list').innerHTML = filtered.map(d => `
     <tr>
       <td><span class="tlink" onclick="openDDet('${d.id}')">${d.id}</span></td>
       <td>${d.mittente.nome}</td>
       <td>${d.merci.map(m => m.desc).join(', ')}</td>
       <td>${d.data}</td>
       <td>${badge(d.stato)}</td>
-      <td><button class="btn btn-sm ${d.stato === 'in_transito' ? 'btn-orange' : ''}" onclick="openDDet('${d.id}')">
-        ${d.stato === 'in_transito' ? 'Conferma' : 'Apri'}
+      <td><button class="btn btn-sm ${d.stato === 'in_transito' && d.codice_consegna ? 'btn-orange' : ''}" onclick="openDDet('${d.id}')">
+        ${d.stato === 'in_transito' && d.codice_consegna ? 'Mostra codice' : 'Apri'}
       </button></td>
     </tr>`).join('');
 }
@@ -917,15 +1130,23 @@ async function openDDet(id) {
       <p>${d.vettore.nome} ha accettato la spedizione. La merce è in preparazione per la partenza.</p>
     </div>`;
   } else if (d.stato === 'in_transito') {
-    actionHtml = `<div class="action-box">
-      <h3>📦 Merce in arrivo</h3>
-      <p>La merce è in consegna da ${d.vettore.nome}. Quando la ricevi e la verifichi, conferma la consegna.</p>
-      <button class="btn btn-green" onclick="confermaConsegna('${d.id}')">✓ Conferma consegna</button>
-    </div>`;
+    if (d.codice_consegna) {
+      // L'autista è arrivato: mostra il codice al destinatario
+      actionHtml = `<div class="codice-box">
+        <div class="codice-label">Il tuo codice di consegna</div>
+        <div class="codice-digits">${d.codice_consegna}</div>
+        <div class="codice-hint">Mostra questo codice all'autista — lo inserirà per confermare la consegna</div>
+      </div>`;
+    } else {
+      actionHtml = `<div class="action-box" style="background:var(--blue-light);border-color:#9bc4f0;">
+        <h3>🚛 Merce in arrivo</h3>
+        <p>La merce è in consegna da ${d.vettore.nome}. Quando l'autista arriverà, avvierà la procedura e ti comparirà un codice da mostrargli.</p>
+      </div>`;
+    }
   } else if (d.stato === 'consegnato') {
     actionHtml = `<div class="action-box" style="background:var(--green-light);border-color:#a8d175;">
       <h3>✅ Consegna confermata</h3>
-      <p>Hai confermato la ricezione della merce. Il documento è archiviato e disponibile.</p>
+      <p>La consegna è stata verificata con codice univoco. Il documento è archiviato.</p>
     </div>`;
   }
 
@@ -976,20 +1197,11 @@ async function deleteDoc(id) {
   } catch(e) { toast('⚠️ ' + e.message); }
 }
 
-async function confermaConsegna(id) {
-  try {
-    await api('PUT', `/api/ddts/${id}/consegna`);
-    toast('✅ Consegna confermata! Documento archiviato.');
-    openDDet(id);
-  } catch(e) { toast('⚠️ ' + e.message); }
-}
-
 // ════════════════════════════════════════════════════════════
 // PDF
 // ════════════════════════════════════════════════════════════
 
 async function downloadPdf(ddtId) {
-  // Assicura che jsPDF sia caricato
   if (!window.jspdf) {
     toast('⏳ Caricamento libreria PDF…');
     await new Promise(res => setTimeout(res, 1200));
@@ -1008,25 +1220,20 @@ async function downloadPdf(ddtId) {
   // ── Header navy ──────────────────────────────────────────
   doc.setFillColor(30, 58, 95);
   doc.rect(0, 0, W, 34, 'F');
-
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.text('RoaDoc', M, 14);
-
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text('Documento di Trasporto digitale', M, 20);
-
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   doc.text(`N° ${d.id}`, W - M, 13, { align: 'right' });
-
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   const statoLabel = { attesa_vettore: 'In attesa vettore', accettato: 'Accettato', in_transito: 'In transito', consegnato: 'Consegnato' };
   doc.text(`Data: ${d.data}  ·  Stato: ${statoLabel[d.stato] || d.stato}`, W - M, 20, { align: 'right' });
-
   y = 42;
 
   // ── Tre soggetti ─────────────────────────────────────────
@@ -1040,79 +1247,46 @@ async function downloadPdf(ddtId) {
     const x = M + i * (boxW + 4);
     doc.setFillColor(...p.bg);
     doc.roundedRect(x, y, boxW, 26, 2, 2, 'F');
-
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...p.tc);
+    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(...p.tc);
     doc.text(p.label, x + 4, y + 6);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(44, 44, 42);
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(44, 44, 42);
     doc.text(p.data.nome || '—', x + 4, y + 12, { maxWidth: boxW - 8 });
-
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(95, 94, 90);
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(95, 94, 90);
     if (p.data.piva)      doc.text(`P.IVA: ${p.data.piva}`,  x + 4, y + 18, { maxWidth: boxW - 8 });
     if (p.data.indirizzo) doc.text(p.data.indirizzo,          x + 4, y + 23, { maxWidth: boxW - 8 });
   });
-
   y += 32;
 
   // ── Tabella merce ─────────────────────────────────────────
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(44, 44, 42);
-  doc.text('Merce', M, y);
-  y += 3;
-
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(44, 44, 42);
+  doc.text('Merce', M, y); y += 3;
   doc.autoTable({
     startY: y,
     head: [['Descrizione', 'Qtà', 'Unità', 'Peso']],
     body: d.merci.map(m => [m.desc, String(m.qty), m.unita, m.peso || '—']),
     theme: 'grid',
-    headStyles: {
-      fillColor: [30, 58, 95], textColor: [255,255,255],
-      fontSize: 8.5, fontStyle: 'bold', cellPadding: 4
-    },
+    headStyles: { fillColor: [30, 58, 95], textColor: [255,255,255], fontSize: 8.5, fontStyle: 'bold', cellPadding: 4 },
     bodyStyles: { fontSize: 8.5, cellPadding: 3.5 },
-    columnStyles: {
-      0: { cellWidth: 85 },
-      1: { cellWidth: 20, halign: 'center' },
-      2: { cellWidth: 28, halign: 'center' },
-      3: { cellWidth: 35 }
-    },
+    columnStyles: { 0: { cellWidth: 85 }, 1: { cellWidth: 20, halign: 'center' }, 2: { cellWidth: 28, halign: 'center' }, 3: { cellWidth: 35 } },
     margin: { left: M, right: M }
   });
-
   y = doc.lastAutoTable.finalY + 10;
 
   // ── Note ──────────────────────────────────────────────────
   if (d.noteVettore || d.noteDestinazione) {
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(44, 44, 42);
-    doc.text('Note', M, y);
-    y += 5;
-
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(44, 44, 42);
+    doc.text('Note', M, y); y += 5;
     if (d.noteVettore) {
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(95, 94, 90);
+      doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
       doc.text('Per il vettore:', M, y); y += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(44, 44, 42);
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
       const lv = doc.splitTextToSize(d.noteVettore, W - M * 2);
       doc.text(lv, M, y); y += lv.length * 4.5 + 2;
     }
     if (d.noteDestinazione) {
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(95, 94, 90);
+      doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
       doc.text('Per il destinatario:', M, y); y += 4;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(44, 44, 42);
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
       const ld = doc.splitTextToSize(d.noteDestinazione, W - M * 2);
       doc.text(ld, M, y); y += ld.length * 4.5 + 2;
     }
@@ -1120,47 +1294,29 @@ async function downloadPdf(ddtId) {
   }
 
   // ── Timeline ──────────────────────────────────────────────
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(44, 44, 42);
-  doc.text('Storico spedizione', M, y);
-  y += 7;
-
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(44, 44, 42);
+  doc.text('Storico spedizione', M, y); y += 7;
   const firstPending = d.timeline.findIndex(t => !t.done);
   d.timeline.forEach((t, i) => {
-    // disegna linea verticale di connessione (tranne ultimo)
     if (i < d.timeline.length - 1) {
-      doc.setDrawColor(211, 209, 199);
-      doc.setLineWidth(0.4);
+      doc.setDrawColor(211, 209, 199); doc.setLineWidth(0.4);
       doc.line(M + 3, y + 2, M + 3, y + 10);
     }
-    // pallino colorato
-    const dotColor = t.done
-      ? [99, 153, 34]
-      : (i === firstPending ? [30, 58, 95] : [211, 209, 199]);
+    const dotColor = t.done ? [99,153,34] : (i === firstPending ? [30,58,95] : [211,209,199]);
     doc.setFillColor(...dotColor);
     doc.circle(M + 3, y - 0.5, 2.2, 'F');
-
-    doc.setFontSize(8.5);
-    doc.setFont('helvetica', t.done ? 'bold' : 'normal');
-    doc.setTextColor(44, 44, 42);
+    doc.setFontSize(8.5); doc.setFont('helvetica', t.done ? 'bold' : 'normal'); doc.setTextColor(44, 44, 42);
     doc.text(t.label, M + 9, y);
-
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(95, 94, 90);
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(95, 94, 90);
     doc.text(t.ts || 'In attesa', M + 9, y + 4);
     y += 11;
   });
 
   // ── Footer ────────────────────────────────────────────────
   const PH = 297;
-  doc.setDrawColor(211, 209, 199);
-  doc.setLineWidth(0.5);
+  doc.setDrawColor(211, 209, 199); doc.setLineWidth(0.5);
   doc.line(M, PH - 14, W - M, PH - 14);
-  doc.setFontSize(7.5);
-  doc.setTextColor(95, 94, 90);
-  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5); doc.setTextColor(95, 94, 90); doc.setFont('helvetica', 'normal');
   doc.text('RoaDoc — Documento di Trasporto digitale  ·  roadoc-production.up.railway.app', M, PH - 9);
   doc.text(`Generato il ${new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric' })}`, W - M, PH - 9, { align: 'right' });
 
