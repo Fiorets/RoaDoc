@@ -1,6 +1,6 @@
 const express = require('express');
 const path    = require('path');
-const { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, deleteDdt, nowItalian } = require('./db');
+const { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, setCodiceDdt, deleteDdt, nowItalian } = require('./db');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -9,10 +9,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── GET /api/ddts ────────────────────────────────────────────
-// Query params: ruolo, nome
-// ruolo=mittente    → filtra per mittente.nome
-// ruolo=vettore     → filtra per vettore.nome
-// ruolo=destinatario → filtra per destinatario.nome + solo in_transito/consegnato
 app.get('/api/ddts', (req, res) => {
   const { ruolo, nome } = req.query;
   let all = getAllDdts();
@@ -88,25 +84,50 @@ app.put('/api/ddts/:id/transito', (req, res) => {
   res.json(updated);
 });
 
-// ── DELETE /api/ddts/:id ─────────────────────────────────────
-app.delete('/api/ddts/:id', (req, res) => {
+// ── PUT /api/ddts/:id/avvia-consegna ────────────────────────
+// Il vettore avvia la procedura: genera il codice che apparirà
+// sul dispositivo del destinatario.
+app.put('/api/ddts/:id/avvia-consegna', (req, res) => {
   const ddt = getDdtById(req.params.id);
   if (!ddt) return res.status(404).json({ error: 'DdT non trovato' });
-  deleteDdt(req.params.id);
-  res.json({ ok: true });
+  if (ddt.stato !== 'in_transito') return res.status(400).json({ error: 'Azione consentita solo con spedizione in transito' });
+  if (ddt.codice_consegna) return res.status(400).json({ error: 'Codice già generato per questo DdT' });
+
+  // Genera codice a 6 cifre
+  const codice = String(Math.floor(100000 + Math.random() * 900000));
+  const updated = setCodiceDdt(ddt.id, codice);
+  res.json(updated);
 });
 
 // ── PUT /api/ddts/:id/consegna ───────────────────────────────
+// Il vettore inserisce il codice mostrato dal destinatario.
 app.put('/api/ddts/:id/consegna', (req, res) => {
   const ddt = getDdtById(req.params.id);
   if (!ddt) return res.status(404).json({ error: 'DdT non trovato' });
   if (ddt.stato !== 'in_transito') return res.status(400).json({ error: 'Azione non consentita in questo stato' });
+
+  if (!ddt.codice_consegna) {
+    return res.status(400).json({ error: 'Avviare prima la procedura dal pulsante "Sono arrivato"' });
+  }
+  const { codice } = req.body;
+  if (!codice) return res.status(400).json({ error: 'Codice di consegna obbligatorio' });
+  if (String(codice).trim() !== String(ddt.codice_consegna).trim()) {
+    return res.status(400).json({ error: 'Codice non corretto — riprova' });
+  }
 
   const tl = ddt.timeline;
   tl[4].done = true;
   tl[4].ts   = nowItalian();
   const updated = updateDdtStato(ddt.id, 'consegnato', tl);
   res.json(updated);
+});
+
+// ── DELETE /api/ddts/:id ─────────────────────────────────────
+app.delete('/api/ddts/:id', (req, res) => {
+  const ddt = getDdtById(req.params.id);
+  if (!ddt) return res.status(404).json({ error: 'DdT non trovato' });
+  deleteDdt(req.params.id);
+  res.json({ ok: true });
 });
 
 // ── GET /api/debug ───────────────────────────────────────────
