@@ -1,7 +1,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v3.json';
+const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v4.json';
 
 function load() {
   if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -44,11 +44,11 @@ const TRIES   = { nome: 'Triestina Commercio Srl',      piva: 'IT66778899001', i
 const db = load();
 if (db.ddts.length === 0) {
   // ── Autisti e mezzi ───────────────────────────────────────
-  const A_FERRETTI = { autista: 'Marco Ferretti',  targa_1: 'FN392BK', targa_2: 'XA45321' };
-  const A_BIANCHI  = { autista: 'Luigi Bianchi',   targa_1: 'HB519GH', targa_2: 'XB38201' };
-  const A_ROSSI    = { autista: 'Giovanni Rossi',  targa_1: 'GV789FG', targa_2: 'XA56218' };
-  const A_CONTI    = { autista: 'Andrea Conti',    targa_1: 'FE456HK', targa_2: 'XB78901' };
-  const A_MARI     = { autista: 'Roberto Mari',    targa_1: 'EM234GH', targa_2: 'XA56781' };
+  const A_FERRETTI = { autista: 'Marco Ferretti',  targa_1: 'FN392BK', targa_2: 'XA453RK' };
+  const A_BIANCHI  = { autista: 'Luigi Bianchi',   targa_1: 'HB519GH', targa_2: 'XB382MN' };
+  const A_ROSSI    = { autista: 'Giovanni Rossi',  targa_1: 'GV789FG', targa_2: 'XA562FP' };
+  const A_CONTI    = { autista: 'Andrea Conti',    targa_1: 'FE456HK', targa_2: 'XB789LG' };
+  const A_MARI     = { autista: 'Roberto Mari',    targa_1: 'EM234GH', targa_2: 'XA567BT' };
 
   db.ddts = [
 
@@ -373,6 +373,8 @@ function getAllDdts() {
       u.stato_fatturazione = u.stato === 'consegnato' ? 'da_fatturare' : null;
       changed = true;
     }
+    if (u.luogo_carico   === undefined) { u.luogo_carico   = u.mittente?.indirizzo   || null; changed = true; }
+    if (u.luogo_consegna === undefined) { u.luogo_consegna = u.destinatario?.indirizzo || null; changed = true; }
     return u;
   });
   if (changed) save(db);
@@ -396,6 +398,8 @@ function createDdt(data) {
     destinatario: data.destinatario, merci: data.merci, stato: 'attesa_vettore',
     autista: data.autista || null, targa_1: data.targa_1 || null,
     targa_2: data.targa_2 || null,
+    luogo_carico:   data.luogo_carico   || data.mittente?.indirizzo   || null,
+    luogo_consegna: data.luogo_consegna || data.destinatario?.indirizzo || null,
     noteVettore: data.noteVettore || '', noteDestinazione: data.noteDestinazione || '',
     timeline: data.timeline, codice_consegna: null,
     stato_fatturazione: null, created_at: new Date().toISOString() };

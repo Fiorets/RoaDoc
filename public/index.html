@@ -87,6 +87,9 @@ tr:hover td { background:var(--gray-50); }
 .search-input:focus { outline:none; border-color:var(--navy); }
 .date-select { padding:7px 11px; border:1px solid var(--border); border-radius:var(--radius); font-size:13px; background:#fff; cursor:pointer; font-family:var(--font); }
 .date-select:focus { outline:none; border-color:var(--navy); }
+.date-input { padding:7px 11px; border:1px solid var(--border); border-radius:var(--radius); font-size:13px; background:#fff; font-family:var(--font); color:var(--gray-800); }
+.date-input:focus { outline:none; border-color:var(--navy); }
+.date-range-label { font-size:12px; color:var(--gray-600); white-space:nowrap; }
 .result-count { font-size:12px; color:var(--gray-600); white-space:nowrap; }
 
 /* ── Stats ── */
@@ -324,6 +327,12 @@ tr:hover td { background:var(--gray-50); }
             <button class="btn btn-sm" onclick="exportExcel('mittente')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="m-count"></span>
           </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <span class="date-range-label">Periodo:</span>
+            <input type="date" class="date-input" id="m-from" onchange="setDateRange('mittente','from',this.value)">
+            <span class="date-range-label">→</span>
+            <input type="date" class="date-input" id="m-to" onchange="setDateRange('mittente','to',this.value)">
+          </div>
         </div>
         <div class="card">
           <div class="card-title">I tuoi DdT</div>
@@ -359,12 +368,13 @@ tr:hover td { background:var(--gray-50); }
           <div class="form-group"><label>Ragione sociale</label><input type="text" id="f-m-nome" class="readonly-field" readonly></div>
           <div class="form-group"><label>P.IVA</label><input type="text" id="f-m-piva" class="readonly-field" readonly></div>
         </div>
-        <div class="form-group"><label>Indirizzo</label><input type="text" id="f-m-ind" class="readonly-field" readonly></div>
+        <div class="form-group"><label>Sede legale</label><input type="text" id="f-m-ind" class="readonly-field" readonly></div>
+        <div class="form-group"><label>Luogo di carico <span style="font-size:11px;color:var(--gray-600);">(lascia vuoto per usare sede)</span></label><input type="text" id="f-m-carico" placeholder="Es. Magazzino deposito, Via Emilia Est 234, 41100 Modena"></div>
       </div>
       <div class="card">
         <div class="card-title">🚛 Vettore</div>
         <div class="form-row">
-          <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-v-nome" placeholder="Es. Trans Adriatica Srl" list="demo-vettori" autocomplete="off"></div>
+          <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-v-nome" placeholder="Es. Trans Adriatica Srl" list="demo-vettori" autocomplete="off" onchange="fillVettore()"></div>
           <div class="form-group"><label>P.IVA</label><input type="text" id="f-v-piva" placeholder="IT…"></div>
         </div>
         <datalist id="demo-vettori">
@@ -376,12 +386,15 @@ tr:hover td { background:var(--gray-50); }
         <div class="form-group"><label>Autista</label><input type="text" id="f-v-autista" placeholder="Es. Marco Ferretti"></div>
         <div class="form-row">
           <div class="form-group"><label>Targa 1 (trattore)</label><input type="text" id="f-v-targa-1" placeholder="Es. FN392BK" style="text-transform:uppercase;"></div>
-          <div class="form-group"><label>Targa 2 (semirimorchio)</label><input type="text" id="f-v-targa-2" placeholder="Es. XA45321" style="text-transform:uppercase;"></div>
+          <div class="form-group"><label>Targa 2 (semirimorchio)</label><input type="text" id="f-v-targa-2" placeholder="Es. XA453RK" style="text-transform:uppercase;"></div>
         </div>
       </div>
       <div class="card">
         <div class="card-title">📦 Destinatario</div>
-        <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-d-nome" placeholder="Es. Lombarda Ceramiche SpA" list="demo-destinatari" autocomplete="off"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-d-nome" placeholder="Es. Lombarda Ceramiche SpA" list="demo-destinatari" autocomplete="off" onchange="fillDestinatario()"></div>
+          <div class="form-group"><label>P.IVA</label><input type="text" id="f-d-piva" class="readonly-field" readonly placeholder="Auto-compilato"></div>
+        </div>
         <datalist id="demo-destinatari">
           <option value="Lombarda Ceramiche SpA">
           <option value="Romano &amp; Figli Srl">
@@ -390,7 +403,8 @@ tr:hover td { background:var(--gray-50); }
           <option value="Piemonte Distribuzione SpA">
           <option value="Triestina Commercio Srl">
         </datalist>
-        <div class="form-group"><label>Indirizzo consegna</label><input type="text" id="f-d-ind" placeholder="Es. Via Roma 15, 20100 Milano"></div>
+        <div class="form-group"><label>Sede legale</label><input type="text" id="f-d-sede" class="readonly-field" readonly placeholder="Auto-compilato dal nome"></div>
+        <div class="form-group"><label>Indirizzo di consegna <span style="font-size:11px;color:var(--gray-600);">(se diverso dalla sede)</span></label><input type="text" id="f-d-consegna" placeholder="Es. Magazzino ingresso merci, Via Mecenate 76/B"></div>
       </div>
       <div class="card">
         <div class="card-title">📦 Merce</div>
@@ -459,6 +473,12 @@ tr:hover td { background:var(--gray-50); }
             <button class="btn btn-sm" onclick="exportExcel('vettore')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="v-count"></span>
           </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <span class="date-range-label">Periodo:</span>
+            <input type="date" class="date-input" id="v-from" onchange="setDateRange('vettore','from',this.value)">
+            <span class="date-range-label">→</span>
+            <input type="date" class="date-input" id="v-to" onchange="setDateRange('vettore','to',this.value)">
+          </div>
         </div>
         <div class="card">
           <div class="card-title">Spedizioni assegnate</div>
@@ -515,6 +535,12 @@ tr:hover td { background:var(--gray-50); }
             <button class="btn btn-sm" onclick="exportExcel('destinatario')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="d-count"></span>
           </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <span class="date-range-label">Periodo:</span>
+            <input type="date" class="date-input" id="d-from" onchange="setDateRange('destinatario','from',this.value)">
+            <span class="date-range-label">→</span>
+            <input type="date" class="date-input" id="d-to" onchange="setDateRange('destinatario','to',this.value)">
+          </div>
         </div>
         <div class="card">
           <div class="card-title">DdT in arrivo e ricevuti</div>
@@ -550,9 +576,9 @@ const subView = { mittente: 'archivio', vettore: 'archivio', destinatario: 'arch
 
 // Stato filtri per ogni ruolo
 const filterState = {
-  mittente:     { tab: 'tutti', search: '', date: '', fatt: '' },
-  vettore:      { tab: 'tutti', search: '', date: '', fatt: '' },
-  destinatario: { tab: 'tutti', search: '', date: '', fatt: '' }
+  mittente:     { tab: 'tutti', search: '', date: '', fatt: '', dateFrom: '', dateTo: '' },
+  vettore:      { tab: 'tutti', search: '', date: '', fatt: '', dateFrom: '', dateTo: '' },
+  destinatario: { tab: 'tutti', search: '', date: '', fatt: '', dateFrom: '', dateTo: '' }
 };
 
 // ── Profili utente demo ────────────────────────────────────
@@ -576,6 +602,44 @@ const UTENTI = {
     pill: 'Destinatario', pillClass: 'pill-d'
   }
 };
+
+// ── Anagrafica aziende demo (per auto-fill form) ───────────
+const DEMO_COMPANIES = {
+  // Vettori
+  'Trans Adriatica Srl':     { piva: 'IT09876543210', indirizzo: 'Via del Porto 8, 60100 Ancona' },
+  'Logistica Padana Srl':    { piva: 'IT06789012345', indirizzo: 'Via Postumia 33, 45100 Rovigo' },
+  'Spedizioni Nord Est Srl': { piva: 'IT07890123456', indirizzo: 'Via Aquileia 18, 33100 Udine' },
+  'TraspoRoma Express Srl':  { piva: 'IT08901234567', indirizzo: 'Via Aurelia 90, 00165 Roma' },
+  // Mittenti terzi
+  'Ceramiche Emiliane SpA':       { piva: 'IT03456789012', indirizzo: 'Via Emilia 45, 41012 Carpi (MO)' },
+  'Pavimenti & Rivestimenti Srl': { piva: 'IT04567890123', indirizzo: 'Via della Ceramica 8, 44042 Cento (FE)' },
+  'Marmi & Pietre del Sud Srl':   { piva: 'IT05678901234', indirizzo: 'Viale Industria 12, 70124 Bari' },
+  // Destinatari
+  'Lombarda Ceramiche SpA':      { piva: 'IT11223344556', indirizzo: 'Via Mecenate 76, 20138 Milano' },
+  'Romano & Figli Srl':          { piva: 'IT22334455667', indirizzo: 'Via Appia 234, 00178 Roma' },
+  'Venezia Import Srl':          { piva: 'IT33445566778', indirizzo: 'Via Piave 12, 30172 Venezia Mestre' },
+  'Meridionale Commerciale Srl': { piva: 'IT44556677889', indirizzo: 'Via Marina 67, 90133 Palermo' },
+  'Piemonte Distribuzione SpA':  { piva: 'IT55667788990', indirizzo: 'Corso Francia 23, 10138 Torino' },
+  'Triestina Commercio Srl':     { piva: 'IT66778899001', indirizzo: 'Via Commerciale 56, 34147 Trieste' },
+};
+
+function fillVettore() {
+  const nome = document.getElementById('f-v-nome').value.trim();
+  const co = DEMO_COMPANIES[nome];
+  if (co) document.getElementById('f-v-piva').value = co.piva;
+}
+
+function fillDestinatario() {
+  const nome = document.getElementById('f-d-nome').value.trim();
+  const co = DEMO_COMPANIES[nome];
+  if (co) {
+    document.getElementById('f-d-piva').value  = co.piva;
+    document.getElementById('f-d-sede').value  = co.indirizzo;
+    // Pre-compila luogo consegna solo se vuoto
+    const consegna = document.getElementById('f-d-consegna');
+    if (!consegna.value) consegna.value = co.indirizzo;
+  }
+}
 
 const STATI = {
   attesa_vettore: { label: 'In attesa vettore', cls: 'badge-amber' },
@@ -627,9 +691,11 @@ function exportExcel(role) {
     'Mittente':          d.mittente?.nome  || '—',
     'Vettore':           d.vettore?.nome   || '—',
     'Destinatario':      d.destinatario?.nome || '—',
-    'Autista':  d.autista  || '—',
-    'Targa 1':  d.targa_1 || '—',
-    'Targa 2':  d.targa_2 || '—',
+    'Autista':          d.autista   || '—',
+    'Targa 1':          d.targa_1  || '—',
+    'Targa 2':          d.targa_2  || '—',
+    'Luogo di carico':   d.luogo_carico   || d.mittente?.indirizzo   || '—',
+    'Luogo di consegna': d.luogo_consegna || d.destinatario?.indirizzo || '—',
     'Merce':             (d.merci || []).map(m => `${m.qty} ${m.unita} – ${m.desc}${m.peso ? ' ('+m.peso+')' : ''}`).join(' | '),
     'Stato spedizione':  STATI[d.stato]?.label || d.stato,
     'Fatturazione':      d.stato === 'consegnato' ? (d.stato_fatturazione === 'fatturato' ? 'Fatturato' : 'Da fatturare') : '—'
@@ -688,8 +754,16 @@ function parseDateIT(s) {
   return new Date(+p[2], +p[1] - 1, +p[0]);
 }
 
+function setDateRange(role, which, val) {
+  if (which === 'from') filterState[role].dateFrom = val;
+  else                  filterState[role].dateTo   = val;
+  if (role === 'mittente')     renderMList();
+  else if (role === 'vettore') renderVList();
+  else                         renderDList();
+}
+
 function applyFilters(ddts, role) {
-  const { tab, search, date, fatt } = filterState[role];
+  const { tab, search, date, fatt, dateFrom, dateTo } = filterState[role];
   const now = new Date();
   // Inizio settimana corrente (lunedì)
   const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
@@ -720,6 +794,14 @@ function applyFilters(ddts, role) {
           if (dt.getMonth() !== now.getMonth() || dt.getFullYear() !== now.getFullYear()) return false;
         }
         if (date === 'y2026' && dt.getFullYear() !== 2026) return false;
+      }
+    }
+    // Intervallo date personalizzato
+    if (dateFrom || dateTo) {
+      const dt = parseDateIT(d.data);
+      if (dt) {
+        if (dateFrom && dt < new Date(dateFrom)) return false;
+        if (dateTo) { const to = new Date(dateTo); to.setHours(23,59,59,999); if (dt > to) return false; }
       }
     }
     // Fatturazione
@@ -924,8 +1006,9 @@ async function openMDet(id) {
         ${d.autista ? `<div class="detail-row"><span class="detail-label">Autista</span><span class="detail-value">${d.autista}</span></div>` : ''}
         ${d.targa_1 ? `<div class="detail-row"><span class="detail-label">Targa 1</span><span class="detail-value">${d.targa_1}</span></div>` : ''}
         ${d.targa_2 ? `<div class="detail-row"><span class="detail-label">Targa 2</span><span class="detail-value">${d.targa_2}</span></div>` : ''}
+        <div class="detail-row"><span class="detail-label">Luogo di carico</span><span class="detail-value">${d.luogo_carico||d.mittente?.indirizzo||'—'}</span></div>
         <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
-        <div class="detail-row"><span class="detail-label">Indirizzo consegna</span><span class="detail-value">${d.destinatario.indirizzo || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Luogo di consegna</span><span class="detail-value">${d.luogo_consegna||d.destinatario?.indirizzo||'—'}</span></div>
       </div>
       <div class="card">
         <div class="card-title">Stato spedizione</div>
@@ -970,8 +1053,11 @@ async function navNuovoDdt() {
   document.getElementById('f-v-autista').value = '';
   document.getElementById('f-v-targa-1').value = '';
   document.getElementById('f-v-targa-2').value = '';
+  document.getElementById('f-m-carico').value  = '';
   document.getElementById('f-d-nome').value    = '';
-  document.getElementById('f-d-ind').value     = '';
+  document.getElementById('f-d-piva').value    = '';
+  document.getElementById('f-d-sede').value    = '';
+  document.getElementById('f-d-consegna').value = '';
   document.getElementById('f-note-v').value    = '';
   document.getElementById('f-note-d').value    = '';
   document.getElementById('f-num').value     = '';
@@ -1042,7 +1128,13 @@ async function creaDoc() {
       autista: document.getElementById('f-v-autista').value.trim() || null,
       targa_1: document.getElementById('f-v-targa-1').value.trim().toUpperCase() || null,
       targa_2: document.getElementById('f-v-targa-2').value.trim().toUpperCase() || null,
-      destinatario: { nome: dNome, indirizzo: document.getElementById('f-d-ind').value.trim() },
+      luogo_carico: document.getElementById('f-m-carico').value.trim() || UTENTI.mittente.indirizzo,
+      destinatario: {
+        nome: dNome,
+        piva: document.getElementById('f-d-piva').value.trim(),
+        indirizzo: document.getElementById('f-d-sede').value.trim()
+      },
+      luogo_consegna: document.getElementById('f-d-consegna').value.trim() || document.getElementById('f-d-sede').value.trim() || null,
       merci,
       noteVettore:      document.getElementById('f-note-v').value.trim(),
       noteDestinazione: document.getElementById('f-note-d').value.trim()
@@ -1173,9 +1265,9 @@ async function openVDet(id) {
         <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
         <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${d.data}</span></div>
         <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
-        <div class="detail-row"><span class="detail-label">Partenza</span><span class="detail-value">${d.mittente.indirizzo||'—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Luogo di carico</span><span class="detail-value">${d.luogo_carico||d.mittente?.indirizzo||'—'}</span></div>
         <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
-        <div class="detail-row"><span class="detail-label">Consegna a</span><span class="detail-value">${d.destinatario.indirizzo||'—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Luogo di consegna</span><span class="detail-value">${d.luogo_consegna||d.destinatario?.indirizzo||'—'}</span></div>
         ${d.autista ? `<div class="detail-row"><span class="detail-label">Autista</span><span class="detail-value">${d.autista}</span></div>` : ''}
         ${d.targa_1 ? `<div class="detail-row"><span class="detail-label">Targa 1</span><span class="detail-value">${d.targa_1}</span></div>` : ''}
         ${d.targa_2 ? `<div class="detail-row"><span class="detail-label">Targa 2</span><span class="detail-value">${d.targa_2}</span></div>` : ''}
@@ -1352,7 +1444,7 @@ async function openDDet(id) {
         ${d.autista ? `<div class="detail-row"><span class="detail-label">Autista</span><span class="detail-value">${d.autista}</span></div>` : ''}
         ${d.targa_1 ? `<div class="detail-row"><span class="detail-label">Targa 1</span><span class="detail-value">${d.targa_1}</span></div>` : ''}
         ${d.targa_2 ? `<div class="detail-row"><span class="detail-label">Targa 2</span><span class="detail-value">${d.targa_2}</span></div>` : ''}
-        <div class="detail-row"><span class="detail-label">Indirizzo consegna</span><span class="detail-value">${d.destinatario.indirizzo||'—'}</span></div>
+        <div class="detail-row"><span class="detail-label">Luogo di consegna</span><span class="detail-value">${d.luogo_consegna||d.destinatario?.indirizzo||'—'}</span></div>
         ${d.noteDestinazione ? `<div class="detail-row"><span class="detail-label">Note per te</span><span class="detail-value">${d.noteDestinazione}</span></div>` : ''}
       </div>
       <div class="card">
