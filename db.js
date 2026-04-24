@@ -327,8 +327,9 @@ if (db.ddts.length === 0) {
 
 function nowItalian() {
   const d = new Date();
-  return d.toLocaleDateString('it-IT') + ' ' +
-         d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const tz = { timeZone: 'Europe/Rome' };
+  return d.toLocaleDateString('it-IT', tz) + ' ' +
+         d.toLocaleTimeString('it-IT', { ...tz, hour: '2-digit', minute: '2-digit' });
 }
 
 function getAllDdts() {
