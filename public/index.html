@@ -369,9 +369,9 @@ tr:hover td { background:var(--gray-50); }
         </div>
         <div class="form-row">
           <div class="form-group"><label>Autista</label><input type="text" id="f-v-autista" placeholder="Es. Mario Rossi"></div>
-          <div class="form-group"><label>Targa trattore</label><input type="text" id="f-v-targa-t" placeholder="Es. AB123CD" style="text-transform:uppercase;"></div>
+          <div class="form-group"><label>Targa 1</label><input type="text" id="f-v-targa-1" placeholder="Es. AB123CD" style="text-transform:uppercase;"></div>
         </div>
-        <div class="form-group"><label>Targa rimorchio</label><input type="text" id="f-v-targa-r" placeholder="Es. XY456ZW" style="text-transform:uppercase;"></div>
+        <div class="form-group"><label>Targa 2</label><input type="text" id="f-v-targa-2" placeholder="Es. XY456ZW" style="text-transform:uppercase;"></div>
       </div>
       <div class="card">
         <div class="card-title">📦 Destinatario</div>
@@ -616,9 +616,9 @@ function exportExcel(role) {
     'Mittente':          d.mittente?.nome  || '—',
     'Vettore':           d.vettore?.nome   || '—',
     'Destinatario':      d.destinatario?.nome || '—',
-    'Autista':           d.autista         || '—',
-    'Targa trattore':    d.targa_trattore  || '—',
-    'Targa rimorchio':   d.targa_rimorchio || '—',
+    'Autista':  d.autista  || '—',
+    'Targa 1':  d.targa_1 || '—',
+    'Targa 2':  d.targa_2 || '—',
     'Merce':             (d.merci || []).map(m => `${m.qty} ${m.unita} – ${m.desc}${m.peso ? ' ('+m.peso+')' : ''}`).join(' | '),
     'Stato spedizione':  STATI[d.stato]?.label || d.stato,
     'Fatturazione':      d.stato === 'consegnato' ? (d.stato_fatturazione === 'fatturato' ? 'Fatturato' : 'Da fatturare') : '—'
@@ -1023,9 +1023,9 @@ async function creaDoc() {
       data: dataFmt,
       mittente:     { nome: UTENTI.mittente.nome, piva: UTENTI.mittente.piva, indirizzo: UTENTI.mittente.indirizzo },
       vettore:      { nome: vNome, piva: document.getElementById('f-v-piva').value.trim() },
-      autista:       document.getElementById('f-v-autista').value.trim() || null,
-      targa_trattore: document.getElementById('f-v-targa-t').value.trim().toUpperCase() || null,
-      targa_rimorchio: document.getElementById('f-v-targa-r').value.trim().toUpperCase() || null,
+      autista: document.getElementById('f-v-autista').value.trim() || null,
+      targa_1: document.getElementById('f-v-targa-1').value.trim().toUpperCase() || null,
+      targa_2: document.getElementById('f-v-targa-2').value.trim().toUpperCase() || null,
       destinatario: { nome: dNome, paese: document.getElementById('f-d-paese').value.trim(), indirizzo: document.getElementById('f-d-ind').value.trim() },
       merci,
       noteVettore:      document.getElementById('f-note-v').value.trim(),
@@ -1088,7 +1088,7 @@ function renderVList() {
       <td>${d.mittente.nome}</td>
       <td>${d.destinatario.nome}</td>
       <td>${d.data}</td>
-      <td>${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
+      <td style="white-space:nowrap">${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
       <td><button class="btn btn-sm ${d.stato === 'attesa_vettore' ? 'btn-primary' : ''}" onclick="openVDet('${d.id}')">
         ${d.stato === 'attesa_vettore' ? 'Accetta' : 'Gestisci'}
       </button></td>
@@ -1161,8 +1161,8 @@ async function openVDet(id) {
         <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
         <div class="detail-row"><span class="detail-label">Consegna a</span><span class="detail-value">${d.destinatario.indirizzo||'—'}</span></div>
         ${d.autista ? `<div class="detail-row"><span class="detail-label">Autista</span><span class="detail-value">${d.autista}</span></div>` : ''}
-        ${d.targa_trattore ? `<div class="detail-row"><span class="detail-label">Targa trattore</span><span class="detail-value">${d.targa_trattore}</span></div>` : ''}
-        ${d.targa_rimorchio ? `<div class="detail-row"><span class="detail-label">Targa rimorchio</span><span class="detail-value">${d.targa_rimorchio}</span></div>` : ''}
+        ${d.targa_1 ? `<div class="detail-row"><span class="detail-label">Targa 1</span><span class="detail-value">${d.targa_1}</span></div>` : ''}
+        ${d.targa_2 ? `<div class="detail-row"><span class="detail-label">Targa 2</span><span class="detail-value">${d.targa_2}</span></div>` : ''}
         ${d.noteVettore ? `<div class="detail-row"><span class="detail-label">Note per te</span><span class="detail-value">${d.noteVettore}</span></div>` : ''}
       </div>
       <div class="card">
@@ -1270,7 +1270,7 @@ function renderDList() {
       <td>${d.mittente.nome}</td>
       <td>${d.merci.map(m => m.desc).join(', ')}</td>
       <td>${d.data}</td>
-      <td>${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
+      <td style="white-space:nowrap">${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
       <td><button class="btn btn-sm ${d.stato === 'in_transito' && d.codice_consegna ? 'btn-orange' : ''}" onclick="openDDet('${d.id}')">
         ${d.stato === 'in_transito' && d.codice_consegna ? 'Mostra codice' : 'Apri'}
       </button></td>

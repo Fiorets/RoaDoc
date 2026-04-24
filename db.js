@@ -1,7 +1,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data.json';
+const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v2.json';
 
 function load() {
   if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -43,281 +43,309 @@ const WIEN    = { nome: 'Wien Handel GmbH',      piva: 'AT890123456',   paese: '
 
 const db = load();
 if (db.ddts.length === 0) {
+  // ── Autisti e mezzi ───────────────────────────────────────
+  const A_FERRETTI = { autista: 'Marco Ferretti',  targa_1: 'FN392BK', targa_2: 'OR4532' };
+  const A_BIANCHI  = { autista: 'Luigi Bianchi',   targa_1: 'AB519GH', targa_2: 'XY3820' };
+  const A_ROSSI    = { autista: 'Giovanni Rossi',  targa_1: 'MO789FG', targa_2: 'LO5621' };
+  const A_CONTI    = { autista: 'Andrea Conti',    targa_1: 'FE456HK', targa_2: 'AN7890' };
+  const A_MARI     = { autista: 'Roberto Mari',    targa_1: 'RM234GH', targa_2: 'LT5678' };
+
   db.ddts = [
 
     // ═══════════════════════════════════════════════════════════════════
     // GRUPPO 1 — Acme → Trans Adriatica → Bayern  (15 DDT — Anno 2026)
-    // Visibili a tutti e tre i profili protagonisti.
-    // 12 consegnati · 1 in_transito · 1 accettato · 1 attesa_vettore
-    // Distribuiti su Jan–Apr 2026 per coprire tutti i filtri data.
     // ═══════════════════════════════════════════════════════════════════
 
-    // ── Gennaio 2026 ──────────────────────────────────────
+    // ── Gennaio 2026 — FATTURATI ──────────────────────────
     {
       id: 'DDT-2026-0001', data: '08/01/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Piastrelle gres porcellanato 60×60', qty: 48, unita: 'colli', peso: '960 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino A',
       timeline: makeTl('consegnato','08/01/2026 08:15','08/01/2026 09:30','08/01/2026 11:00','10/01/2026 14:20'),
-      codice_consegna: null, created_at: '2026-01-08T08:15:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-01-08T08:15:00.000Z'
     },
     {
       id: 'DDT-2026-0002', data: '20/01/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Ceramica pavimento effetto pietra 30×60', qty: 36, unita: 'colli', peso: '720 kg' }],
       noteVettore: 'Fragile', noteDestinazione: '',
       timeline: makeTl('consegnato','20/01/2026 07:45','20/01/2026 08:50','20/01/2026 10:30','22/01/2026 11:15'),
-      codice_consegna: null, created_at: '2026-01-20T07:45:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-01-20T07:45:00.000Z'
     },
 
-    // ── Febbraio 2026 ─────────────────────────────────────
+    // ── Febbraio 2026 — FATTURATI ─────────────────────────
     {
       id: 'DDT-2026-0003', data: '03/02/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Maioliche decorate 20×20', qty: 20, unita: 'colli', peso: '280 kg' }],
       noteVettore: '', noteDestinazione: 'Ritiro su appuntamento',
       timeline: makeTl('consegnato','03/02/2026 09:00','03/02/2026 10:15','03/02/2026 14:00','05/02/2026 10:30'),
-      codice_consegna: null, created_at: '2026-02-03T09:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-02-03T09:00:00.000Z'
     },
     {
       id: 'DDT-2026-0004', data: '17/02/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Klinker per esterni 30×30', qty: 60, unita: 'colli', peso: '1.200 kg' }],
       noteVettore: 'Merce pesante — pallet rinforzati', noteDestinazione: '',
       timeline: makeTl('consegnato','17/02/2026 08:30','17/02/2026 09:45','17/02/2026 13:00','19/02/2026 15:00'),
-      codice_consegna: null, created_at: '2026-02-17T08:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-02-17T08:30:00.000Z'
     },
     {
       id: 'DDT-2026-0005', data: '27/02/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Rivestimento murale effetto marmo 30×90', qty: 24, unita: 'colli', peso: '480 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino B',
       timeline: makeTl('consegnato','27/02/2026 10:00','27/02/2026 11:20','27/02/2026 15:30','02/03/2026 12:00'),
-      codice_consegna: null, created_at: '2026-02-27T10:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-02-27T10:00:00.000Z'
     },
 
-    // ── Marzo 2026 ────────────────────────────────────────
+    // ── Marzo 2026 — FATTURATI ────────────────────────────
     {
       id: 'DDT-2026-0006', data: '05/03/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Piastrelle effetto legno 20×120', qty: 30, unita: 'colli', peso: '540 kg' }],
       noteVettore: 'Fragile — non capovolgere', noteDestinazione: '',
       timeline: makeTl('consegnato','05/03/2026 08:00','05/03/2026 09:10','05/03/2026 12:00','07/03/2026 10:45'),
-      codice_consegna: null, created_at: '2026-03-05T08:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-03-05T08:00:00.000Z'
     },
     {
       id: 'DDT-2026-0007', data: '16/03/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Ceramica tecnica antiscivolo 45×45', qty: 40, unita: 'colli', peso: '800 kg' }],
       noteVettore: '', noteDestinazione: 'Apertura magazzino h 8-17',
       timeline: makeTl('consegnato','16/03/2026 09:30','16/03/2026 10:40','16/03/2026 14:00','18/03/2026 11:00'),
-      codice_consegna: null, created_at: '2026-03-16T09:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-03-16T09:30:00.000Z'
     },
     {
       id: 'DDT-2026-0008', data: '27/03/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Gres porcellanato effetto cemento 60×60', qty: 42, unita: 'colli', peso: '840 kg' }],
       noteVettore: 'Attenzione: merce fragile', noteDestinazione: 'Consegnare al magazzino B',
       timeline: makeTl('consegnato','27/03/2026 08:20','27/03/2026 09:35','27/03/2026 13:00','30/03/2026 10:20'),
-      codice_consegna: null, created_at: '2026-03-27T08:20:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2026-03-27T08:20:00.000Z'
     },
 
-    // ── Aprile 2026 — inizio mese ─────────────────────────
+    // ── Aprile 2026 — DA FATTURARE ────────────────────────
     {
       id: 'DDT-2026-0009', data: '02/04/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Listelli decorativi misti', qty: 10, unita: 'colli', peso: '120 kg' }],
       noteVettore: '', noteDestinazione: '',
       timeline: makeTl('consegnato','02/04/2026 10:00','02/04/2026 11:15','02/04/2026 15:00','04/04/2026 12:30'),
-      codice_consegna: null, created_at: '2026-04-02T10:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'da_fatturare', created_at: '2026-04-02T10:00:00.000Z'
     },
     {
       id: 'DDT-2026-0010', data: '09/04/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Piastrelle gres porcellanato 80×80', qty: 32, unita: 'colli', peso: '960 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: 'Consegnare al magazzino A',
       timeline: makeTl('consegnato','09/04/2026 08:45','09/04/2026 10:00','09/04/2026 13:30','11/04/2026 11:45'),
-      codice_consegna: null, created_at: '2026-04-09T08:45:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'da_fatturare', created_at: '2026-04-09T08:45:00.000Z'
     },
     {
       id: 'DDT-2026-0011', data: '15/04/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Ceramica pavimento effetto pietra 30×60', qty: 28, unita: 'colli', peso: '560 kg' }],
       noteVettore: '', noteDestinazione: '',
       timeline: makeTl('consegnato','15/04/2026 09:10','15/04/2026 10:25','15/04/2026 14:00','17/04/2026 10:00'),
-      codice_consegna: null, created_at: '2026-04-15T09:10:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'da_fatturare', created_at: '2026-04-15T09:10:00.000Z'
     },
     {
       id: 'DDT-2026-0012', data: '18/04/2026', stato: 'consegnato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Klinker per esterni 30×30', qty: 50, unita: 'colli', peso: '1.000 kg' }],
       noteVettore: 'Merce pesante — pallet rinforzati', noteDestinazione: 'Consegnare al magazzino B',
       timeline: makeTl('consegnato','18/04/2026 08:00','18/04/2026 09:20','18/04/2026 11:00','19/04/2026 13:00'),
-      codice_consegna: null, created_at: '2026-04-18T08:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'da_fatturare', created_at: '2026-04-18T08:00:00.000Z'
     },
 
-    // ── Questa settimana (21–23 Apr 2026) ────────────────
+    // ── Questa settimana (attivi) ─────────────────────────
     {
-      // In transito · codice pre-impostato per testare il flusso consegna
       id: 'DDT-2026-0013', data: '21/04/2026', stato: 'in_transito',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_FERRETTI,
       merci: [{ desc: 'Piastrelle ceramica 60×60', qty: 24, unita: 'colli', peso: '480 kg' }],
       noteVettore: 'Fragile — maneggiare con cura', noteDestinazione: 'Consegnare al magazzino B',
       timeline: makeTl('in_transito','21/04/2026 08:30','21/04/2026 09:15','21/04/2026 10:00', null),
-      codice_consegna: '482931', created_at: '2026-04-21T08:30:00.000Z'
+      codice_consegna: '482931', stato_fatturazione: null, created_at: '2026-04-21T08:30:00.000Z'
     },
     {
-      // Accettato ieri
       id: 'DDT-2026-0014', data: '22/04/2026', stato: 'accettato',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      ...A_BIANCHI,
       merci: [{ desc: 'Monoporosa bianca 25×38', qty: 18, unita: 'colli', peso: '252 kg' }],
       noteVettore: '', noteDestinazione: '',
       timeline: makeTl('accettato','22/04/2026 10:30','22/04/2026 11:45', null, null),
-      codice_consegna: null, created_at: '2026-04-22T10:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: null, created_at: '2026-04-22T10:30:00.000Z'
     },
     {
-      // Creato oggi (23/04/2026) — visibile nel filtro "Oggi"
-      id: 'DDT-2026-0015', data: '23/04/2026', stato: 'attesa_vettore',
+      id: 'DDT-2026-0015', data: '24/04/2026', stato: 'attesa_vettore',
       mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      autista: null, targa_1: null, targa_2: null,
       merci: [{ desc: 'Maioliche decorate 20×20', qty: 15, unita: 'colli', peso: '210 kg' }],
       noteVettore: '', noteDestinazione: '',
-      timeline: makeTl('attesa_vettore','23/04/2026 09:00', null, null, null),
-      codice_consegna: null, created_at: '2026-04-23T09:00:00.000Z'
+      timeline: makeTl('attesa_vettore','24/04/2026 09:00', null, null, null),
+      codice_consegna: null, stato_fatturazione: null, created_at: '2026-04-24T09:00:00.000Z'
     },
 
     // ═══════════════════════════════════════════════════════════════════
     // GRUPPO 2 — Acme mittente · altri vettori/destinatari (5 DDT 2025)
-    // Solo nel profilo Acme Ceramiche Srl.
     // ═══════════════════════════════════════════════════════════════════
     {
       id: 'DDT-2025-0001', data: '12/03/2025', stato: 'consegnato',
       mittente: ACME, vettore: LOG_PAD, destinatario: SCHMIDT,
+      ...A_ROSSI,
       merci: [{ desc: 'Piastrelle gres porcellanato 60×60', qty: 36, unita: 'colli', peso: '720 kg' }],
       noteVettore: '', noteDestinazione: '',
       timeline: makeTl('consegnato','12/03/2025 08:30','12/03/2025 10:00','12/03/2025 13:00','14/03/2025 12:00'),
-      codice_consegna: null, created_at: '2025-03-12T08:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-03-12T08:30:00.000Z'
     },
     {
       id: 'DDT-2025-0002', data: '05/05/2025', stato: 'consegnato',
       mittente: ACME, vettore: SPED_NE, destinatario: PARIS,
+      ...A_CONTI,
       merci: [{ desc: 'Rivestimento murale effetto marmo 30×90', qty: 20, unita: 'colli', peso: '400 kg' }],
       noteVettore: 'Fragile', noteDestinazione: '',
       timeline: makeTl('consegnato','05/05/2025 09:00','05/05/2025 10:30','05/05/2025 14:00','08/05/2025 10:00'),
-      codice_consegna: null, created_at: '2025-05-05T09:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-05-05T09:00:00.000Z'
     },
     {
       id: 'DDT-2025-0003', data: '18/07/2025', stato: 'consegnato',
       mittente: ACME, vettore: TRASPOROMA, destinatario: IBERIAN,
+      ...A_MARI,
       merci: [{ desc: 'Ceramica tecnica antiscivolo 45×45', qty: 30, unita: 'colli', peso: '600 kg' }],
       noteVettore: '', noteDestinazione: 'Consegna mattutina',
       timeline: makeTl('consegnato','18/07/2025 08:00','18/07/2025 09:15','18/07/2025 12:30','21/07/2025 11:00'),
-      codice_consegna: null, created_at: '2025-07-18T08:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-07-18T08:00:00.000Z'
     },
     {
       id: 'DDT-2025-0004', data: '09/09/2025', stato: 'consegnato',
       mittente: ACME, vettore: LOG_PAD, destinatario: NORDIC,
+      ...A_ROSSI,
       merci: [{ desc: 'Piastrelle effetto legno 20×120', qty: 24, unita: 'colli', peso: '432 kg' }],
       noteVettore: 'Fragile — non capovolgere', noteDestinazione: '',
       timeline: makeTl('consegnato','09/09/2025 09:00','09/09/2025 10:20','09/09/2025 14:00','12/09/2025 10:30'),
-      codice_consegna: null, created_at: '2025-09-09T09:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-09-09T09:00:00.000Z'
     },
     {
       id: 'DDT-2025-0005', data: '20/11/2025', stato: 'consegnato',
       mittente: ACME, vettore: SPED_NE, destinatario: WIEN,
+      ...A_CONTI,
       merci: [{ desc: 'Gres porcellanato effetto cemento 60×60', qty: 38, unita: 'colli', peso: '760 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino centrale',
       timeline: makeTl('consegnato','20/11/2025 10:30','20/11/2025 11:45','20/11/2025 15:00','23/11/2025 12:00'),
-      codice_consegna: null, created_at: '2025-11-20T10:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-11-20T10:30:00.000Z'
     },
 
     // ═══════════════════════════════════════════════════════════════════
     // GRUPPO 3 — Trans Adriatica vettore · altri mittenti/dest. (5 DDT 2025)
-    // Solo nel profilo Trans Adriatica Srl.
     // ═══════════════════════════════════════════════════════════════════
     {
       id: 'DDT-2025-0006', data: '14/02/2025', stato: 'consegnato',
       mittente: CER_EM, vettore: TRANS, destinatario: SCHMIDT,
+      ...A_FERRETTI,
       merci: [{ desc: 'Ceramica da pavimento effetto pietra', qty: 44, unita: 'colli', peso: '880 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: '',
       timeline: makeTl('consegnato','14/02/2025 08:00','14/02/2025 09:30','14/02/2025 12:00','17/02/2025 13:00'),
-      codice_consegna: null, created_at: '2025-02-14T08:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-02-14T08:00:00.000Z'
     },
     {
       id: 'DDT-2025-0007', data: '08/04/2025', stato: 'consegnato',
       mittente: PAV_IT, vettore: TRANS, destinatario: PARIS,
+      ...A_BIANCHI,
       merci: [{ desc: 'Maioliche decorate 20×20', qty: 25, unita: 'colli', peso: '350 kg' }],
       noteVettore: '', noteDestinazione: 'Orario ritiro: 9-17',
       timeline: makeTl('consegnato','08/04/2025 10:00','08/04/2025 11:20','08/04/2025 15:00','10/04/2025 11:30'),
-      codice_consegna: null, created_at: '2025-04-08T10:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-04-08T10:00:00.000Z'
     },
     {
       id: 'DDT-2025-0008', data: '23/06/2025', stato: 'consegnato',
       mittente: MARMI, vettore: TRANS, destinatario: NORDIC,
+      ...A_FERRETTI,
       merci: [{ desc: 'Granito grigio levigato 60×60', qty: 22, unita: 'colli', peso: '550 kg' }],
       noteVettore: 'Merce molto pesante — 2 operatori per scarico', noteDestinazione: '',
       timeline: makeTl('consegnato','23/06/2025 07:30','23/06/2025 08:45','23/06/2025 11:00','26/06/2025 10:00'),
-      codice_consegna: null, created_at: '2025-06-23T07:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-06-23T07:30:00.000Z'
     },
     {
       id: 'DDT-2025-0009', data: '11/08/2025', stato: 'consegnato',
       mittente: CER_EM, vettore: TRANS, destinatario: IBERIAN,
+      ...A_BIANCHI,
       merci: [{ desc: 'Klinker per esterni 30×30', qty: 55, unita: 'colli', peso: '1.100 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: 'Consegna su appuntamento',
       timeline: makeTl('consegnato','11/08/2025 09:30','11/08/2025 10:45','11/08/2025 14:30','14/08/2025 12:00'),
-      codice_consegna: null, created_at: '2025-08-11T09:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-08-11T09:30:00.000Z'
     },
     {
       id: 'DDT-2025-0010', data: '15/10/2025', stato: 'consegnato',
       mittente: PAV_IT, vettore: TRANS, destinatario: WIEN,
+      ...A_FERRETTI,
       merci: [{ desc: 'Monoporosa bianca 25×38', qty: 18, unita: 'colli', peso: '252 kg' }],
       noteVettore: '', noteDestinazione: '',
       timeline: makeTl('consegnato','15/10/2025 14:00','15/10/2025 15:10','15/10/2025 17:00','17/10/2025 11:00'),
-      codice_consegna: null, created_at: '2025-10-15T14:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-10-15T14:00:00.000Z'
     },
 
     // ═══════════════════════════════════════════════════════════════════
     // GRUPPO 4 — Bayern Handel destinatario · altri mitt./vettori (5 DDT 2025)
-    // Solo nel profilo Bayern Handel GmbH.
     // ═══════════════════════════════════════════════════════════════════
     {
       id: 'DDT-2025-0011', data: '20/01/2025', stato: 'consegnato',
       mittente: CER_EM, vettore: LOG_PAD, destinatario: BAYER,
+      ...A_ROSSI,
       merci: [{ desc: 'Ceramica da pavimento effetto legno 20×120', qty: 28, unita: 'colli', peso: '504 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino A',
       timeline: makeTl('consegnato','20/01/2025 08:45','20/01/2025 10:00','20/01/2025 13:00','22/01/2025 11:00'),
-      codice_consegna: null, created_at: '2025-01-20T08:45:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-01-20T08:45:00.000Z'
     },
     {
       id: 'DDT-2025-0012', data: '18/03/2025', stato: 'consegnato',
       mittente: PAV_IT, vettore: TRASPOROMA, destinatario: BAYER,
+      ...A_MARI,
       merci: [{ desc: 'Rivestimento murale effetto marmo 30×90', qty: 16, unita: 'colli', peso: '320 kg' }],
       noteVettore: 'Fragile', noteDestinazione: '',
       timeline: makeTl('consegnato','18/03/2025 09:15','18/03/2025 10:30','18/03/2025 14:00','20/03/2025 12:00'),
-      codice_consegna: null, created_at: '2025-03-18T09:15:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-03-18T09:15:00.000Z'
     },
     {
       id: 'DDT-2025-0013', data: '07/05/2025', stato: 'consegnato',
       mittente: MARMI, vettore: SPED_NE, destinatario: BAYER,
+      ...A_CONTI,
       merci: [{ desc: 'Granito grigio levigato 60×60', qty: 18, unita: 'colli', peso: '450 kg' }],
       noteVettore: 'Merce molto pesante', noteDestinazione: 'Consegnare al magazzino B',
       timeline: makeTl('consegnato','07/05/2025 08:00','07/05/2025 09:20','07/05/2025 12:30','09/05/2025 10:30'),
-      codice_consegna: null, created_at: '2025-05-07T08:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-05-07T08:00:00.000Z'
     },
     {
       id: 'DDT-2025-0014', data: '14/08/2025', stato: 'consegnato',
       mittente: CER_EM, vettore: LOG_PAD, destinatario: BAYER,
+      ...A_ROSSI,
       merci: [{ desc: 'Piastrelle gres porcellanato 80×80', qty: 30, unita: 'colli', peso: '900 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: 'Consegnare al magazzino A',
       timeline: makeTl('consegnato','14/08/2025 08:30','14/08/2025 09:45','14/08/2025 13:00','18/08/2025 11:00'),
-      codice_consegna: null, created_at: '2025-08-14T08:30:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-08-14T08:30:00.000Z'
     },
     {
       id: 'DDT-2025-0015', data: '06/11/2025', stato: 'consegnato',
       mittente: PAV_IT, vettore: TRASPOROMA, destinatario: BAYER,
+      ...A_MARI,
       merci: [{ desc: 'Ceramica tecnica antiscivolo 45×45', qty: 35, unita: 'colli', peso: '700 kg' }],
       noteVettore: '', noteDestinazione: '',
       timeline: makeTl('consegnato','06/11/2025 10:00','06/11/2025 11:15','06/11/2025 14:00','08/11/2025 12:00'),
-      codice_consegna: null, created_at: '2025-11-06T10:00:00.000Z'
+      codice_consegna: null, stato_fatturazione: 'fatturato', created_at: '2025-11-06T10:00:00.000Z'
     }
   ];
 
@@ -338,9 +366,9 @@ function getAllDdts() {
   let changed = false;
   db.ddts = db.ddts.map(d => {
     const u = { ...d };
-    if (u.autista          === undefined) { u.autista          = null; changed = true; }
-    if (u.targa_trattore   === undefined) { u.targa_trattore   = null; changed = true; }
-    if (u.targa_rimorchio  === undefined) { u.targa_rimorchio  = null; changed = true; }
+    if (u.autista          === undefined) { u.autista  = null; changed = true; }
+    if (u.targa_1          === undefined) { u.targa_1  = null; changed = true; }
+    if (u.targa_2          === undefined) { u.targa_2  = null; changed = true; }
     if (u.stato_fatturazione === undefined) {
       u.stato_fatturazione = u.stato === 'consegnato' ? 'da_fatturare' : null;
       changed = true;
@@ -366,8 +394,8 @@ function createDdt(data) {
   const db  = load();
   const ddt = { id: getNextId(), data: data.data, mittente: data.mittente, vettore: data.vettore,
     destinatario: data.destinatario, merci: data.merci, stato: 'attesa_vettore',
-    autista: data.autista || null, targa_trattore: data.targa_trattore || null,
-    targa_rimorchio: data.targa_rimorchio || null,
+    autista: data.autista || null, targa_1: data.targa_1 || null,
+    targa_2: data.targa_2 || null,
     noteVettore: data.noteVettore || '', noteDestinazione: data.noteDestinazione || '',
     timeline: data.timeline, codice_consegna: null,
     stato_fatturazione: null, created_at: new Date().toISOString() };
