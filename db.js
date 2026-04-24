@@ -333,7 +333,22 @@ function nowItalian() {
 }
 
 function getAllDdts() {
-  return load().ddts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const db = load();
+  // Migrazione automatica: aggiunge campi mancanti ai DDT esistenti
+  let changed = false;
+  db.ddts = db.ddts.map(d => {
+    const u = { ...d };
+    if (u.autista          === undefined) { u.autista          = null; changed = true; }
+    if (u.targa_trattore   === undefined) { u.targa_trattore   = null; changed = true; }
+    if (u.targa_rimorchio  === undefined) { u.targa_rimorchio  = null; changed = true; }
+    if (u.stato_fatturazione === undefined) {
+      u.stato_fatturazione = u.stato === 'consegnato' ? 'da_fatturare' : null;
+      changed = true;
+    }
+    return u;
+  });
+  if (changed) save(db);
+  return db.ddts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
 function getDdtById(id) {
@@ -351,11 +366,21 @@ function createDdt(data) {
   const db  = load();
   const ddt = { id: getNextId(), data: data.data, mittente: data.mittente, vettore: data.vettore,
     destinatario: data.destinatario, merci: data.merci, stato: 'attesa_vettore',
+    autista: data.autista || null, targa_trattore: data.targa_trattore || null,
+    targa_rimorchio: data.targa_rimorchio || null,
     noteVettore: data.noteVettore || '', noteDestinazione: data.noteDestinazione || '',
-    timeline: data.timeline, codice_consegna: null, created_at: new Date().toISOString() };
+    timeline: data.timeline, codice_consegna: null,
+    stato_fatturazione: null, created_at: new Date().toISOString() };
   db.ddts.unshift(ddt);
   save(db);
   return ddt;
+}
+
+function updateFatturazione(id, stato) {
+  const db = load(); const idx = db.ddts.findIndex(d => d.id === id);
+  if (idx === -1) return null;
+  db.ddts[idx].stato_fatturazione = stato;
+  save(db); return db.ddts[idx];
 }
 
 function updateDdtStato(id, stato, timeline) {
@@ -376,4 +401,4 @@ function deleteDdt(id) {
   const db = load(); db.ddts = db.ddts.filter(d => d.id !== id); save(db);
 }
 
-module.exports = { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, setCodiceDdt, deleteDdt, nowItalian };
+module.exports = { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, setCodiceDdt, updateFatturazione, deleteDdt, nowItalian };

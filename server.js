@@ -1,6 +1,6 @@
 const express = require('express');
 const path    = require('path');
-const { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, setCodiceDdt, deleteDdt, nowItalian } = require('./db');
+const { getAllDdts, getDdtById, getNextId, createDdt, updateDdtStato, setCodiceDdt, updateFatturazione, deleteDdt, nowItalian } = require('./db');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -119,6 +119,17 @@ app.put('/api/ddts/:id/consegna', (req, res) => {
   tl[4].done = true;
   tl[4].ts   = nowItalian();
   const updated = updateDdtStato(ddt.id, 'consegnato', tl);
+  res.json(updated);
+});
+
+// ── PUT /api/ddts/:id/fatturazione ──────────────────────────
+app.put('/api/ddts/:id/fatturazione', (req, res) => {
+  const ddt = getDdtById(req.params.id);
+  if (!ddt) return res.status(404).json({ error: 'DdT non trovato' });
+  if (ddt.stato !== 'consegnato') return res.status(400).json({ error: 'Solo i DdT consegnati possono essere fatturati' });
+  const { stato } = req.body;
+  if (!['da_fatturare', 'fatturato'].includes(stato)) return res.status(400).json({ error: 'Stato fatturazione non valido' });
+  const updated = updateFatturazione(ddt.id, stato);
   res.json(updated);
 });
 

@@ -217,6 +217,13 @@ tr:hover td { background:var(--gray-50); }
 .partner-name { font-size:13px; flex:1; }
 .partner-count { font-size:13px; font-weight:600; color:var(--navy); white-space:nowrap; }
 .status-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; display:inline-block; }
+
+/* ── Fatturazione ── */
+.badge-fatt  { background:#EAF3DE; color:#27500A; }
+.badge-nofatt{ background:#FAEEDA; color:#633806; }
+.fatt-box { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-radius:var(--radius); border:1px solid var(--border); background:var(--gray-50); margin-bottom:16px; gap:12px; }
+.fatt-box .fatt-label { font-size:13px; color:var(--gray-600); }
+.fatt-box .fatt-value { font-size:13px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -309,6 +316,12 @@ tr:hover td { background:var(--gray-50); }
               <option value="mese">Questo mese</option>
               <option value="y2026">Anno 2026</option>
             </select>
+            <select class="date-select" id="m-fatt" onchange="setFatt('mittente',this.value)">
+              <option value="">Fatturazione</option>
+              <option value="da_fatturare">Da fatturare</option>
+              <option value="fatturato">Fatturati</option>
+            </select>
+            <button class="btn btn-sm" onclick="exportExcel('mittente')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="m-count"></span>
           </div>
         </div>
@@ -354,6 +367,11 @@ tr:hover td { background:var(--gray-50); }
           <div class="form-group"><label>Ragione sociale *</label><input type="text" id="f-v-nome" placeholder="Es. Trans Adriatica Srl"></div>
           <div class="form-group"><label>P.IVA</label><input type="text" id="f-v-piva" placeholder="IT…"></div>
         </div>
+        <div class="form-row">
+          <div class="form-group"><label>Autista</label><input type="text" id="f-v-autista" placeholder="Es. Mario Rossi"></div>
+          <div class="form-group"><label>Targa trattore</label><input type="text" id="f-v-targa-t" placeholder="Es. AB123CD" style="text-transform:uppercase;"></div>
+        </div>
+        <div class="form-group"><label>Targa rimorchio</label><input type="text" id="f-v-targa-r" placeholder="Es. XY456ZW" style="text-transform:uppercase;"></div>
       </div>
       <div class="card">
         <div class="card-title">📦 Destinatario</div>
@@ -422,6 +440,12 @@ tr:hover td { background:var(--gray-50); }
               <option value="mese">Questo mese</option>
               <option value="y2026">Anno 2026</option>
             </select>
+            <select class="date-select" id="v-fatt" onchange="setFatt('vettore',this.value)">
+              <option value="">Fatturazione</option>
+              <option value="da_fatturare">Da fatturare</option>
+              <option value="fatturato">Fatturati</option>
+            </select>
+            <button class="btn btn-sm" onclick="exportExcel('vettore')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="v-count"></span>
           </div>
         </div>
@@ -472,6 +496,12 @@ tr:hover td { background:var(--gray-50); }
               <option value="mese">Questo mese</option>
               <option value="y2026">Anno 2026</option>
             </select>
+            <select class="date-select" id="d-fatt" onchange="setFatt('destinatario',this.value)">
+              <option value="">Fatturazione</option>
+              <option value="da_fatturare">Da fatturare</option>
+              <option value="fatturato">Fatturati</option>
+            </select>
+            <button class="btn btn-sm" onclick="exportExcel('destinatario')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="d-count"></span>
           </div>
         </div>
@@ -509,9 +539,9 @@ const subView = { mittente: 'archivio', vettore: 'archivio', destinatario: 'arch
 
 // Stato filtri per ogni ruolo
 const filterState = {
-  mittente:     { tab: 'tutti', search: '', date: '' },
-  vettore:      { tab: 'tutti', search: '', date: '' },
-  destinatario: { tab: 'tutti', search: '', date: '' }
+  mittente:     { tab: 'tutti', search: '', date: '', fatt: '' },
+  vettore:      { tab: 'tutti', search: '', date: '', fatt: '' },
+  destinatario: { tab: 'tutti', search: '', date: '', fatt: '' }
 };
 
 // ── Profili utente demo ────────────────────────────────────
@@ -561,6 +591,49 @@ function badge(stato) {
   return `<span class="badge ${s.cls}">${s.label}</span>`;
 }
 
+function badgeFatt(sf) {
+  if (sf === 'fatturato') return `<span class="badge badge-fatt" style="margin-left:4px;">Fatturato</span>`;
+  return `<span class="badge badge-nofatt" style="margin-left:4px;">Da fatturare</span>`;
+}
+
+async function toggleFatturazione(id, statoAttuale, callbackFn) {
+  const nuovoStato = statoAttuale === 'fatturato' ? 'da_fatturare' : 'fatturato';
+  try {
+    await api('PUT', `/api/ddts/${id}/fatturazione`, { stato: nuovoStato });
+    toast(nuovoStato === 'fatturato' ? '✓ Segnato come fatturato' : '↩ Riportato a da fatturare');
+    callbackFn(id);
+  } catch(e) { toast('⚠️ ' + e.message); }
+}
+
+function exportExcel(role) {
+  if (!window.XLSX) { toast('⏳ Libreria non disponibile, riprova tra un secondo'); return; }
+  const ddts = applyFilters(rawDdts[role], role);
+  if (!ddts.length) { toast('Nessun documento da esportare con i filtri attuali'); return; }
+
+  const rows = ddts.map(d => ({
+    'Numero DdT':        d.id,
+    'Data':              d.data,
+    'Mittente':          d.mittente?.nome  || '—',
+    'Vettore':           d.vettore?.nome   || '—',
+    'Destinatario':      d.destinatario?.nome || '—',
+    'Autista':           d.autista         || '—',
+    'Targa trattore':    d.targa_trattore  || '—',
+    'Targa rimorchio':   d.targa_rimorchio || '—',
+    'Merce':             (d.merci || []).map(m => `${m.qty} ${m.unita} – ${m.desc}${m.peso ? ' ('+m.peso+')' : ''}`).join(' | '),
+    'Stato spedizione':  STATI[d.stato]?.label || d.stato,
+    'Fatturazione':      d.stato === 'consegnato' ? (d.stato_fatturazione === 'fatturato' ? 'Fatturato' : 'Da fatturare') : '—'
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Larghezze colonne
+  ws['!cols'] = [14,10,22,22,22,16,12,12,40,16,12].map(w => ({ wch: w }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DdT');
+  const oggi = new Date().toLocaleDateString('it-IT').replace(/\//g,'-');
+  XLSX.writeFile(wb, `RoaDoc_${role}_${oggi}.xlsx`);
+  toast('✓ Excel scaricato!');
+}
+
 function tlHtml(timeline) {
   return timeline.map((t, i) => {
     const firstPending = timeline.findIndex(x => !x.done);
@@ -605,7 +678,7 @@ function parseDateIT(s) {
 }
 
 function applyFilters(ddts, role) {
-  const { tab, search, date } = filterState[role];
+  const { tab, search, date, fatt } = filterState[role];
   const now = new Date();
   // Inizio settimana corrente (lunedì)
   const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
@@ -638,6 +711,12 @@ function applyFilters(ddts, role) {
         if (date === 'y2026' && dt.getFullYear() !== 2026) return false;
       }
     }
+    // Fatturazione
+    if (fatt) {
+      if (d.stato !== 'consegnato') return false;
+      const sf = d.stato_fatturazione || 'da_fatturare';
+      if (sf !== fatt) return false;
+    }
     return true;
   });
 }
@@ -660,6 +739,13 @@ function setSearch(role, val) {
 
 function setDate(role, val) {
   filterState[role].date = val;
+  if (role === 'mittente')     renderMList();
+  else if (role === 'vettore') renderVList();
+  else                         renderDList();
+}
+
+function setFatt(role, val) {
+  filterState[role].fatt = val;
   if (role === 'mittente')     renderMList();
   else if (role === 'vettore') renderVList();
   else                         renderDList();
@@ -773,7 +859,7 @@ function renderMList() {
       <td>${d.destinatario.nome}</td>
       <td>${d.vettore.nome}</td>
       <td>${d.data}</td>
-      <td>${badge(d.stato)}</td>
+      <td>${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
       <td><button class="btn btn-sm" onclick="openMDet('${d.id}')">Apri</button></td>
     </tr>`).join('');
 }
@@ -844,6 +930,13 @@ async function openMDet(id) {
       <div class="card-title">Note</div>
       ${d.noteVettore ? `<div class="detail-row"><span class="detail-label">Per il vettore</span><span class="detail-value">${d.noteVettore}</span></div>` : ''}
       ${d.noteDestinazione ? `<div class="detail-row"><span class="detail-label">Per il destinatario</span><span class="detail-value">${d.noteDestinazione}</span></div>` : ''}
+    </div>` : ''}
+    ${d.stato === 'consegnato' ? `
+    <div class="fatt-box">
+      <div><div class="fatt-label">Stato fatturazione</div><div class="fatt-value">${badgeFatt(d.stato_fatturazione)}</div></div>
+      <button class="btn btn-sm ${d.stato_fatturazione === 'fatturato' ? '' : 'btn-green'}" onclick="toggleFatturazione('${d.id}','${d.stato_fatturazione || 'da_fatturare'}', openMDet)">
+        ${d.stato_fatturazione === 'fatturato' ? '↩ Riporta a da fatturare' : '✓ Segna come fatturato'}
+      </button>
     </div>` : ''}
     <div style="display:flex;justify-content:flex-end;padding-bottom:48px;">
       <button class="btn" style="color:var(--red-text);border-color:var(--red-text);" onclick="deleteDoc('${d.id}')">🗑 Elimina DdT</button>
@@ -930,6 +1023,9 @@ async function creaDoc() {
       data: dataFmt,
       mittente:     { nome: UTENTI.mittente.nome, piva: UTENTI.mittente.piva, indirizzo: UTENTI.mittente.indirizzo },
       vettore:      { nome: vNome, piva: document.getElementById('f-v-piva').value.trim() },
+      autista:       document.getElementById('f-v-autista').value.trim() || null,
+      targa_trattore: document.getElementById('f-v-targa-t').value.trim().toUpperCase() || null,
+      targa_rimorchio: document.getElementById('f-v-targa-r').value.trim().toUpperCase() || null,
       destinatario: { nome: dNome, paese: document.getElementById('f-d-paese').value.trim(), indirizzo: document.getElementById('f-d-ind').value.trim() },
       merci,
       noteVettore:      document.getElementById('f-note-v').value.trim(),
@@ -992,7 +1088,7 @@ function renderVList() {
       <td>${d.mittente.nome}</td>
       <td>${d.destinatario.nome}</td>
       <td>${d.data}</td>
-      <td>${badge(d.stato)}</td>
+      <td>${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
       <td><button class="btn btn-sm ${d.stato === 'attesa_vettore' ? 'btn-primary' : ''}" onclick="openVDet('${d.id}')">
         ${d.stato === 'attesa_vettore' ? 'Accetta' : 'Gestisci'}
       </button></td>
@@ -1064,6 +1160,9 @@ async function openVDet(id) {
         <div class="detail-row"><span class="detail-label">Partenza</span><span class="detail-value">${d.mittente.indirizzo||'—'}</span></div>
         <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
         <div class="detail-row"><span class="detail-label">Consegna a</span><span class="detail-value">${d.destinatario.indirizzo||'—'}</span></div>
+        ${d.autista ? `<div class="detail-row"><span class="detail-label">Autista</span><span class="detail-value">${d.autista}</span></div>` : ''}
+        ${d.targa_trattore ? `<div class="detail-row"><span class="detail-label">Targa trattore</span><span class="detail-value">${d.targa_trattore}</span></div>` : ''}
+        ${d.targa_rimorchio ? `<div class="detail-row"><span class="detail-label">Targa rimorchio</span><span class="detail-value">${d.targa_rimorchio}</span></div>` : ''}
         ${d.noteVettore ? `<div class="detail-row"><span class="detail-label">Note per te</span><span class="detail-value">${d.noteVettore}</span></div>` : ''}
       </div>
       <div class="card">
@@ -1079,6 +1178,13 @@ async function openVDet(id) {
       </table>
     </div>
     ${actionHtml}
+    ${d.stato === 'consegnato' ? `
+    <div class="fatt-box">
+      <div><div class="fatt-label">Stato fatturazione</div><div class="fatt-value">${badgeFatt(d.stato_fatturazione)}</div></div>
+      <button class="btn btn-sm ${d.stato_fatturazione === 'fatturato' ? '' : 'btn-green'}" onclick="toggleFatturazione('${d.id}','${d.stato_fatturazione || 'da_fatturare'}', openVDet)">
+        ${d.stato_fatturazione === 'fatturato' ? '↩ Riporta a da fatturare' : '✓ Segna come fatturato'}
+      </button>
+    </div>` : ''}
     <div style="height:48px;"></div>`;
 }
 
@@ -1164,7 +1270,7 @@ function renderDList() {
       <td>${d.mittente.nome}</td>
       <td>${d.merci.map(m => m.desc).join(', ')}</td>
       <td>${d.data}</td>
-      <td>${badge(d.stato)}</td>
+      <td>${badge(d.stato)} ${d.stato === 'consegnato' ? badgeFatt(d.stato_fatturazione) : ''}</td>
       <td><button class="btn btn-sm ${d.stato === 'in_transito' && d.codice_consegna ? 'btn-orange' : ''}" onclick="openDDet('${d.id}')">
         ${d.stato === 'in_transito' && d.codice_consegna ? 'Mostra codice' : 'Apri'}
       </button></td>
@@ -1243,6 +1349,13 @@ async function openDDet(id) {
       </table>
     </div>
     ${actionHtml}
+    ${d.stato === 'consegnato' ? `
+    <div class="fatt-box">
+      <div><div class="fatt-label">Stato fatturazione</div><div class="fatt-value">${badgeFatt(d.stato_fatturazione)}</div></div>
+      <button class="btn btn-sm ${d.stato_fatturazione === 'fatturato' ? '' : 'btn-green'}" onclick="toggleFatturazione('${d.id}','${d.stato_fatturazione || 'da_fatturare'}', openDDet)">
+        ${d.stato_fatturazione === 'fatturato' ? '↩ Riporta a da fatturare' : '✓ Segna come fatturato'}
+      </button>
+    </div>` : ''}
     <div style="height:48px;"></div>`;
 }
 
@@ -1533,5 +1646,7 @@ async function downloadPdf(ddtId) {
 <!-- jsPDF + autoTable (CDN) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<!-- SheetJS per export Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
