@@ -1,7 +1,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v2.json';
+const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v3.json';
 
 function load() {
   if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -20,9 +20,9 @@ function makeTl(stato, created, accepted, transit, delivered) {
 }
 
 // ── Aziende protagoniste ───────────────────────────────────
-const ACME  = { nome: 'Acme Ceramiche Srl',  piva: 'IT02345678901', indirizzo: 'Via Roma 15, 41100 Modena' };
-const TRANS = { nome: 'Trans Adriatica Srl', piva: 'IT09876543210' };
-const BAYER = { nome: 'Bayern Handel GmbH',  piva: 'DE345678901',   paese: 'Germania', indirizzo: 'Müllerstr. 42, 80469 München' };
+const ACME  = { nome: 'Acme Ceramiche Srl',      piva: 'IT02345678901', indirizzo: 'Via Roma 15, 41100 Modena' };
+const TRANS = { nome: 'Trans Adriatica Srl',     piva: 'IT09876543210' };
+const LOMB  = { nome: 'Lombarda Ceramiche SpA',  piva: 'IT11223344556', indirizzo: 'Via Montenapoleone 8, 20121 Milano' };
 
 // ── Aziende terze — mittenti ───────────────────────────────
 const CER_EM = { nome: 'Ceramiche Emiliane SpA',       piva: 'IT03456789012', indirizzo: 'Via Emilia 45, 41012 Carpi (MO)' };
@@ -35,20 +35,20 @@ const SPED_NE    = { nome: 'Spedizioni Nord Est Srl', piva: 'IT07890123456' };
 const TRASPOROMA = { nome: 'TraspoRoma Express Srl',  piva: 'IT08901234567' };
 
 // ── Aziende terze — destinatari ──────────────────────────
-const SCHMIDT = { nome: 'Schmidt Keramik GmbH',  piva: 'DE456789012',   paese: 'Germania', indirizzo: 'Frankfurter Str. 88, 60311 Frankfurt' };
-const PARIS   = { nome: 'Paris Carrelage SARL',  piva: 'FR56789012345', paese: 'Francia',  indirizzo: '24 Rue du Commerce, 75015 Paris' };
-const IBERIAN = { nome: 'Iberian Trade SL',      piva: 'ES678901234B',  paese: 'Spagna',   indirizzo: 'Calle Mayor 56, 28013 Madrid' };
-const NORDIC  = { nome: 'Nordic Import AB',      piva: 'SE7890123456',  paese: 'Svezia',   indirizzo: 'Kungsgatan 14, 11156 Stockholm' };
-const WIEN    = { nome: 'Wien Handel GmbH',      piva: 'AT890123456',   paese: 'Austria',  indirizzo: 'Mariahilfer Str. 45, 1060 Wien' };
+const ROMANO  = { nome: 'Romano & Figli Srl',           piva: 'IT22334455667', indirizzo: 'Via Appia 234, 00178 Roma' };
+const VENEZIA = { nome: 'Venezia Import Srl',           piva: 'IT33445566778', indirizzo: 'Calle Larga 45, 30124 Venezia' };
+const MERIDI  = { nome: 'Meridionale Commerciale Srl',  piva: 'IT44556677889', indirizzo: 'Via Marina 67, 90133 Palermo' };
+const PIEMON  = { nome: 'Piemonte Distribuzione SpA',   piva: 'IT55667788990', indirizzo: 'Corso Francia 23, 10138 Torino' };
+const TRIES   = { nome: 'Triestina Commercio Srl',      piva: 'IT66778899001', indirizzo: 'Via Roma 56, 34100 Trieste' };
 
 const db = load();
 if (db.ddts.length === 0) {
   // ── Autisti e mezzi ───────────────────────────────────────
-  const A_FERRETTI = { autista: 'Marco Ferretti',  targa_1: 'FN392BK', targa_2: 'OR4532' };
-  const A_BIANCHI  = { autista: 'Luigi Bianchi',   targa_1: 'AB519GH', targa_2: 'XY3820' };
-  const A_ROSSI    = { autista: 'Giovanni Rossi',  targa_1: 'MO789FG', targa_2: 'LO5621' };
-  const A_CONTI    = { autista: 'Andrea Conti',    targa_1: 'FE456HK', targa_2: 'AN7890' };
-  const A_MARI     = { autista: 'Roberto Mari',    targa_1: 'RM234GH', targa_2: 'LT5678' };
+  const A_FERRETTI = { autista: 'Marco Ferretti',  targa_1: 'FN392BK', targa_2: 'XA45321' };
+  const A_BIANCHI  = { autista: 'Luigi Bianchi',   targa_1: 'HB519GH', targa_2: 'XB38201' };
+  const A_ROSSI    = { autista: 'Giovanni Rossi',  targa_1: 'GV789FG', targa_2: 'XA56218' };
+  const A_CONTI    = { autista: 'Andrea Conti',    targa_1: 'FE456HK', targa_2: 'XB78901' };
+  const A_MARI     = { autista: 'Roberto Mari',    targa_1: 'EM234GH', targa_2: 'XA56781' };
 
   db.ddts = [
 
@@ -59,7 +59,7 @@ if (db.ddts.length === 0) {
     // ── Gennaio 2026 — FATTURATI ──────────────────────────
     {
       id: 'DDT-2026-0001', data: '08/01/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Piastrelle gres porcellanato 60×60', qty: 48, unita: 'colli', peso: '960 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino A',
@@ -68,7 +68,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0002', data: '20/01/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Ceramica pavimento effetto pietra 30×60', qty: 36, unita: 'colli', peso: '720 kg' }],
       noteVettore: 'Fragile', noteDestinazione: '',
@@ -79,7 +79,7 @@ if (db.ddts.length === 0) {
     // ── Febbraio 2026 — FATTURATI ─────────────────────────
     {
       id: 'DDT-2026-0003', data: '03/02/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Maioliche decorate 20×20', qty: 20, unita: 'colli', peso: '280 kg' }],
       noteVettore: '', noteDestinazione: 'Ritiro su appuntamento',
@@ -88,7 +88,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0004', data: '17/02/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Klinker per esterni 30×30', qty: 60, unita: 'colli', peso: '1.200 kg' }],
       noteVettore: 'Merce pesante — pallet rinforzati', noteDestinazione: '',
@@ -97,7 +97,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0005', data: '27/02/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Rivestimento murale effetto marmo 30×90', qty: 24, unita: 'colli', peso: '480 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino B',
@@ -108,7 +108,7 @@ if (db.ddts.length === 0) {
     // ── Marzo 2026 — FATTURATI ────────────────────────────
     {
       id: 'DDT-2026-0006', data: '05/03/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Piastrelle effetto legno 20×120', qty: 30, unita: 'colli', peso: '540 kg' }],
       noteVettore: 'Fragile — non capovolgere', noteDestinazione: '',
@@ -117,7 +117,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0007', data: '16/03/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Ceramica tecnica antiscivolo 45×45', qty: 40, unita: 'colli', peso: '800 kg' }],
       noteVettore: '', noteDestinazione: 'Apertura magazzino h 8-17',
@@ -126,7 +126,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0008', data: '27/03/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Gres porcellanato effetto cemento 60×60', qty: 42, unita: 'colli', peso: '840 kg' }],
       noteVettore: 'Attenzione: merce fragile', noteDestinazione: 'Consegnare al magazzino B',
@@ -137,7 +137,7 @@ if (db.ddts.length === 0) {
     // ── Aprile 2026 — DA FATTURARE ────────────────────────
     {
       id: 'DDT-2026-0009', data: '02/04/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Listelli decorativi misti', qty: 10, unita: 'colli', peso: '120 kg' }],
       noteVettore: '', noteDestinazione: '',
@@ -146,7 +146,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0010', data: '09/04/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Piastrelle gres porcellanato 80×80', qty: 32, unita: 'colli', peso: '960 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: 'Consegnare al magazzino A',
@@ -155,7 +155,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0011', data: '15/04/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Ceramica pavimento effetto pietra 30×60', qty: 28, unita: 'colli', peso: '560 kg' }],
       noteVettore: '', noteDestinazione: '',
@@ -164,7 +164,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0012', data: '18/04/2026', stato: 'consegnato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Klinker per esterni 30×30', qty: 50, unita: 'colli', peso: '1.000 kg' }],
       noteVettore: 'Merce pesante — pallet rinforzati', noteDestinazione: 'Consegnare al magazzino B',
@@ -175,7 +175,7 @@ if (db.ddts.length === 0) {
     // ── Questa settimana (attivi) ─────────────────────────
     {
       id: 'DDT-2026-0013', data: '21/04/2026', stato: 'in_transito',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_FERRETTI,
       merci: [{ desc: 'Piastrelle ceramica 60×60', qty: 24, unita: 'colli', peso: '480 kg' }],
       noteVettore: 'Fragile — maneggiare con cura', noteDestinazione: 'Consegnare al magazzino B',
@@ -184,7 +184,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0014', data: '22/04/2026', stato: 'accettato',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       ...A_BIANCHI,
       merci: [{ desc: 'Monoporosa bianca 25×38', qty: 18, unita: 'colli', peso: '252 kg' }],
       noteVettore: '', noteDestinazione: '',
@@ -193,7 +193,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2026-0015', data: '24/04/2026', stato: 'attesa_vettore',
-      mittente: ACME, vettore: TRANS, destinatario: BAYER,
+      mittente: ACME, vettore: TRANS, destinatario: LOMB,
       autista: null, targa_1: null, targa_2: null,
       merci: [{ desc: 'Maioliche decorate 20×20', qty: 15, unita: 'colli', peso: '210 kg' }],
       noteVettore: '', noteDestinazione: '',
@@ -206,7 +206,7 @@ if (db.ddts.length === 0) {
     // ═══════════════════════════════════════════════════════════════════
     {
       id: 'DDT-2025-0001', data: '12/03/2025', stato: 'consegnato',
-      mittente: ACME, vettore: LOG_PAD, destinatario: SCHMIDT,
+      mittente: ACME, vettore: LOG_PAD, destinatario: ROMANO,
       ...A_ROSSI,
       merci: [{ desc: 'Piastrelle gres porcellanato 60×60', qty: 36, unita: 'colli', peso: '720 kg' }],
       noteVettore: '', noteDestinazione: '',
@@ -215,7 +215,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0002', data: '05/05/2025', stato: 'consegnato',
-      mittente: ACME, vettore: SPED_NE, destinatario: PARIS,
+      mittente: ACME, vettore: SPED_NE, destinatario: VENEZIA,
       ...A_CONTI,
       merci: [{ desc: 'Rivestimento murale effetto marmo 30×90', qty: 20, unita: 'colli', peso: '400 kg' }],
       noteVettore: 'Fragile', noteDestinazione: '',
@@ -224,7 +224,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0003', data: '18/07/2025', stato: 'consegnato',
-      mittente: ACME, vettore: TRASPOROMA, destinatario: IBERIAN,
+      mittente: ACME, vettore: TRASPOROMA, destinatario: MERIDI,
       ...A_MARI,
       merci: [{ desc: 'Ceramica tecnica antiscivolo 45×45', qty: 30, unita: 'colli', peso: '600 kg' }],
       noteVettore: '', noteDestinazione: 'Consegna mattutina',
@@ -233,7 +233,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0004', data: '09/09/2025', stato: 'consegnato',
-      mittente: ACME, vettore: LOG_PAD, destinatario: NORDIC,
+      mittente: ACME, vettore: LOG_PAD, destinatario: PIEMON,
       ...A_ROSSI,
       merci: [{ desc: 'Piastrelle effetto legno 20×120', qty: 24, unita: 'colli', peso: '432 kg' }],
       noteVettore: 'Fragile — non capovolgere', noteDestinazione: '',
@@ -242,7 +242,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0005', data: '20/11/2025', stato: 'consegnato',
-      mittente: ACME, vettore: SPED_NE, destinatario: WIEN,
+      mittente: ACME, vettore: SPED_NE, destinatario: TRIES,
       ...A_CONTI,
       merci: [{ desc: 'Gres porcellanato effetto cemento 60×60', qty: 38, unita: 'colli', peso: '760 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino centrale',
@@ -255,7 +255,7 @@ if (db.ddts.length === 0) {
     // ═══════════════════════════════════════════════════════════════════
     {
       id: 'DDT-2025-0006', data: '14/02/2025', stato: 'consegnato',
-      mittente: CER_EM, vettore: TRANS, destinatario: SCHMIDT,
+      mittente: CER_EM, vettore: TRANS, destinatario: ROMANO,
       ...A_FERRETTI,
       merci: [{ desc: 'Ceramica da pavimento effetto pietra', qty: 44, unita: 'colli', peso: '880 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: '',
@@ -264,7 +264,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0007', data: '08/04/2025', stato: 'consegnato',
-      mittente: PAV_IT, vettore: TRANS, destinatario: PARIS,
+      mittente: PAV_IT, vettore: TRANS, destinatario: VENEZIA,
       ...A_BIANCHI,
       merci: [{ desc: 'Maioliche decorate 20×20', qty: 25, unita: 'colli', peso: '350 kg' }],
       noteVettore: '', noteDestinazione: 'Orario ritiro: 9-17',
@@ -273,7 +273,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0008', data: '23/06/2025', stato: 'consegnato',
-      mittente: MARMI, vettore: TRANS, destinatario: NORDIC,
+      mittente: MARMI, vettore: TRANS, destinatario: PIEMON,
       ...A_FERRETTI,
       merci: [{ desc: 'Granito grigio levigato 60×60', qty: 22, unita: 'colli', peso: '550 kg' }],
       noteVettore: 'Merce molto pesante — 2 operatori per scarico', noteDestinazione: '',
@@ -282,7 +282,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0009', data: '11/08/2025', stato: 'consegnato',
-      mittente: CER_EM, vettore: TRANS, destinatario: IBERIAN,
+      mittente: CER_EM, vettore: TRANS, destinatario: MERIDI,
       ...A_BIANCHI,
       merci: [{ desc: 'Klinker per esterni 30×30', qty: 55, unita: 'colli', peso: '1.100 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: 'Consegna su appuntamento',
@@ -291,7 +291,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0010', data: '15/10/2025', stato: 'consegnato',
-      mittente: PAV_IT, vettore: TRANS, destinatario: WIEN,
+      mittente: PAV_IT, vettore: TRANS, destinatario: TRIES,
       ...A_FERRETTI,
       merci: [{ desc: 'Monoporosa bianca 25×38', qty: 18, unita: 'colli', peso: '252 kg' }],
       noteVettore: '', noteDestinazione: '',
@@ -304,7 +304,7 @@ if (db.ddts.length === 0) {
     // ═══════════════════════════════════════════════════════════════════
     {
       id: 'DDT-2025-0011', data: '20/01/2025', stato: 'consegnato',
-      mittente: CER_EM, vettore: LOG_PAD, destinatario: BAYER,
+      mittente: CER_EM, vettore: LOG_PAD, destinatario: LOMB,
       ...A_ROSSI,
       merci: [{ desc: 'Ceramica da pavimento effetto legno 20×120', qty: 28, unita: 'colli', peso: '504 kg' }],
       noteVettore: '', noteDestinazione: 'Consegnare al magazzino A',
@@ -313,7 +313,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0012', data: '18/03/2025', stato: 'consegnato',
-      mittente: PAV_IT, vettore: TRASPOROMA, destinatario: BAYER,
+      mittente: PAV_IT, vettore: TRASPOROMA, destinatario: LOMB,
       ...A_MARI,
       merci: [{ desc: 'Rivestimento murale effetto marmo 30×90', qty: 16, unita: 'colli', peso: '320 kg' }],
       noteVettore: 'Fragile', noteDestinazione: '',
@@ -322,7 +322,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0013', data: '07/05/2025', stato: 'consegnato',
-      mittente: MARMI, vettore: SPED_NE, destinatario: BAYER,
+      mittente: MARMI, vettore: SPED_NE, destinatario: LOMB,
       ...A_CONTI,
       merci: [{ desc: 'Granito grigio levigato 60×60', qty: 18, unita: 'colli', peso: '450 kg' }],
       noteVettore: 'Merce molto pesante', noteDestinazione: 'Consegnare al magazzino B',
@@ -331,7 +331,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0014', data: '14/08/2025', stato: 'consegnato',
-      mittente: CER_EM, vettore: LOG_PAD, destinatario: BAYER,
+      mittente: CER_EM, vettore: LOG_PAD, destinatario: LOMB,
       ...A_ROSSI,
       merci: [{ desc: 'Piastrelle gres porcellanato 80×80', qty: 30, unita: 'colli', peso: '900 kg' }],
       noteVettore: 'Merce pesante', noteDestinazione: 'Consegnare al magazzino A',
@@ -340,7 +340,7 @@ if (db.ddts.length === 0) {
     },
     {
       id: 'DDT-2025-0015', data: '06/11/2025', stato: 'consegnato',
-      mittente: PAV_IT, vettore: TRASPOROMA, destinatario: BAYER,
+      mittente: PAV_IT, vettore: TRASPOROMA, destinatario: LOMB,
       ...A_MARI,
       merci: [{ desc: 'Ceramica tecnica antiscivolo 45×45', qty: 35, unita: 'colli', peso: '700 kg' }],
       noteVettore: '', noteDestinazione: '',
