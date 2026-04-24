@@ -1,7 +1,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v4.json';
+const DATA_FILE = process.env.DATA_FILE || '/tmp/roadoc-data-v5.json';
 
 function load() {
   if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -375,6 +375,8 @@ function getAllDdts() {
     }
     if (u.luogo_carico   === undefined) { u.luogo_carico   = u.mittente?.indirizzo   || null; changed = true; }
     if (u.luogo_consegna === undefined) { u.luogo_consegna = u.destinatario?.indirizzo || null; changed = true; }
+    if (u.causale === undefined) { u.causale = 'Vendita';   changed = true; }
+    if (u.porto   === undefined) { u.porto   = 'Franco';    changed = true; }
     return u;
   });
   if (changed) save(db);
@@ -398,6 +400,8 @@ function createDdt(data) {
     destinatario: data.destinatario, merci: data.merci, stato: 'attesa_vettore',
     autista: data.autista || null, targa_1: data.targa_1 || null,
     targa_2: data.targa_2 || null,
+    causale: data.causale || 'Vendita',
+    porto:   data.porto   || 'Franco',
     luogo_carico:   data.luogo_carico   || data.mittente?.indirizzo   || null,
     luogo_consegna: data.luogo_consegna || data.destinatario?.indirizzo || null,
     noteVettore: data.noteVettore || '', noteDestinazione: data.noteDestinazione || '',

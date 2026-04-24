@@ -318,6 +318,7 @@ tr:hover td { background:var(--gray-50); }
               <option value="settimana">Questa settimana</option>
               <option value="mese">Questo mese</option>
               <option value="y2026">Anno 2026</option>
+              <option value="custom">Intervallo personalizzato…</option>
             </select>
             <select class="date-select" id="m-fatt" onchange="setFatt('mittente',this.value)">
               <option value="">Fatturazione</option>
@@ -327,10 +328,10 @@ tr:hover td { background:var(--gray-50); }
             <button class="btn btn-sm" onclick="exportExcel('mittente')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="m-count"></span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <span class="date-range-label">Periodo:</span>
+          <div id="m-daterange" style="display:none;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <span class="date-range-label">Dal</span>
             <input type="date" class="date-input" id="m-from" onchange="setDateRange('mittente','from',this.value)">
-            <span class="date-range-label">→</span>
+            <span class="date-range-label">al</span>
             <input type="date" class="date-input" id="m-to" onchange="setDateRange('mittente','to',this.value)">
           </div>
         </div>
@@ -360,6 +361,27 @@ tr:hover td { background:var(--gray-50); }
         <div class="form-row">
           <div class="form-group"><label>Numero DdT</label><input type="text" id="f-num" class="readonly-field" readonly placeholder="Assegnato automaticamente"></div>
           <div class="form-group"><label>Data</label><input type="date" id="f-data"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Causale del trasporto *</label>
+            <select id="f-causale" class="date-select" style="width:100%;">
+              <option value="Vendita">Vendita</option>
+              <option value="Reso">Reso</option>
+              <option value="Conto lavoro">Conto lavoro</option>
+              <option value="Campionatura">Campionatura</option>
+              <option value="Omaggio">Omaggio</option>
+              <option value="Fiera/Esposizione">Fiera/Esposizione</option>
+              <option value="Deposito">Deposito</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Porto *</label>
+            <select id="f-porto" class="date-select" style="width:100%;">
+              <option value="Franco">Franco (a carico mittente)</option>
+              <option value="Assegnato">Assegnato (a carico destinatario)</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -464,6 +486,7 @@ tr:hover td { background:var(--gray-50); }
               <option value="settimana">Questa settimana</option>
               <option value="mese">Questo mese</option>
               <option value="y2026">Anno 2026</option>
+              <option value="custom">Intervallo personalizzato…</option>
             </select>
             <select class="date-select" id="v-fatt" onchange="setFatt('vettore',this.value)">
               <option value="">Fatturazione</option>
@@ -473,10 +496,10 @@ tr:hover td { background:var(--gray-50); }
             <button class="btn btn-sm" onclick="exportExcel('vettore')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="v-count"></span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <span class="date-range-label">Periodo:</span>
+          <div id="v-daterange" style="display:none;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <span class="date-range-label">Dal</span>
             <input type="date" class="date-input" id="v-from" onchange="setDateRange('vettore','from',this.value)">
-            <span class="date-range-label">→</span>
+            <span class="date-range-label">al</span>
             <input type="date" class="date-input" id="v-to" onchange="setDateRange('vettore','to',this.value)">
           </div>
         </div>
@@ -526,6 +549,7 @@ tr:hover td { background:var(--gray-50); }
               <option value="settimana">Questa settimana</option>
               <option value="mese">Questo mese</option>
               <option value="y2026">Anno 2026</option>
+              <option value="custom">Intervallo personalizzato…</option>
             </select>
             <select class="date-select" id="d-fatt" onchange="setFatt('destinatario',this.value)">
               <option value="">Fatturazione</option>
@@ -535,10 +559,10 @@ tr:hover td { background:var(--gray-50); }
             <button class="btn btn-sm" onclick="exportExcel('destinatario')" title="Esporta in Excel">⬇ Excel</button>
             <span class="result-count" id="d-count"></span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <span class="date-range-label">Periodo:</span>
+          <div id="d-daterange" style="display:none;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <span class="date-range-label">Dal</span>
             <input type="date" class="date-input" id="d-from" onchange="setDateRange('destinatario','from',this.value)">
-            <span class="date-range-label">→</span>
+            <span class="date-range-label">al</span>
             <input type="date" class="date-input" id="d-to" onchange="setDateRange('destinatario','to',this.value)">
           </div>
         </div>
@@ -832,6 +856,19 @@ function setSearch(role, val) {
 
 function setDate(role, val) {
   filterState[role].date = val;
+  const p = role === 'mittente' ? 'm' : role === 'vettore' ? 'v' : 'd';
+  const rangeEl = document.getElementById(`${p}-daterange`);
+  if (val === 'custom') {
+    if (rangeEl) rangeEl.style.display = 'flex';
+  } else {
+    if (rangeEl) rangeEl.style.display = 'none';
+    filterState[role].dateFrom = '';
+    filterState[role].dateTo   = '';
+    const fromEl = document.getElementById(`${p}-from`);
+    const toEl   = document.getElementById(`${p}-to`);
+    if (fromEl) fromEl.value = '';
+    if (toEl)   toEl.value   = '';
+  }
   if (role === 'mittente')     renderMList();
   else if (role === 'vettore') renderVList();
   else                         renderDList();
@@ -1000,6 +1037,8 @@ async function openMDet(id) {
         <div class="card-title">Dettagli documento</div>
         <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
         <div class="detail-row"><span class="detail-label">Data emissione</span><span class="detail-value">${d.data}</span></div>
+        <div class="detail-row"><span class="detail-label">Causale</span><span class="detail-value">${d.causale||'Vendita'}</span></div>
+        <div class="detail-row"><span class="detail-label">Porto</span><span class="detail-value">${d.porto||'Franco'}</span></div>
         <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
         <div class="detail-row"><span class="detail-label">P.IVA mittente</span><span class="detail-value">${d.mittente.piva}</span></div>
         <div class="detail-row"><span class="detail-label">Vettore</span><span class="detail-value">${d.vettore.nome}</span></div>
@@ -1048,6 +1087,8 @@ async function navNuovoDdt() {
   document.getElementById('f-m-nome').value  = u.nome;
   document.getElementById('f-m-piva').value  = u.piva;
   document.getElementById('f-m-ind').value   = u.indirizzo;
+  document.getElementById('f-causale').value   = 'Vendita';
+  document.getElementById('f-porto').value     = 'Franco';
   document.getElementById('f-v-nome').value    = '';
   document.getElementById('f-v-piva').value    = '';
   document.getElementById('f-v-autista').value = '';
@@ -1123,6 +1164,8 @@ async function creaDoc() {
   try {
     const doc = await api('POST', '/api/ddts', {
       data: dataFmt,
+      causale: document.getElementById('f-causale').value,
+      porto:   document.getElementById('f-porto').value,
       mittente:     { nome: UTENTI.mittente.nome, piva: UTENTI.mittente.piva, indirizzo: UTENTI.mittente.indirizzo },
       vettore:      { nome: vNome, piva: document.getElementById('f-v-piva').value.trim() },
       autista: document.getElementById('f-v-autista').value.trim() || null,
@@ -1227,6 +1270,7 @@ async function openVDet(id) {
       // Codice già generato: mostra l'input per inserirlo
       actionHtml = `<div class="action-box">
         <h3>🔑 Inserisci il codice di consegna</h3>
+        <p style="font-size:12px;color:var(--gray-600);margin-bottom:6px;">📱 <em>Questa sezione è pensata per l'autista in mobilità dal suo smartphone.</em></p>
         <p>Chiedi al destinatario il codice a 6 cifre mostrato sul suo schermo e inseriscilo qui per confermare la consegna.</p>
         <div style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;">
           <input class="codice-input" type="text" id="codice-input-${d.id}" maxlength="6" placeholder="000000" inputmode="numeric">
@@ -1237,6 +1281,7 @@ async function openVDet(id) {
       // Codice non ancora generato: avvia la procedura
       actionHtml = `<div class="action-box">
         <h3>📍 Sei arrivato a destinazione?</h3>
+        <p style="font-size:12px;color:var(--gray-600);margin-bottom:6px;">📱 <em>Questa sezione è pensata per l'autista in mobilità dal suo smartphone.</em></p>
         <p>Quando sei dal destinatario, avvia la conferma. Verrà generato un codice univoco che il destinatario ti mostrerà.</p>
         <button class="btn btn-primary" onclick="avviaConsegna('${d.id}')">📲 Sono arrivato — avvia conferma</button>
       </div>`;
@@ -1264,6 +1309,8 @@ async function openVDet(id) {
         <div class="card-title">Dettagli spedizione</div>
         <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
         <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${d.data}</span></div>
+        <div class="detail-row"><span class="detail-label">Causale</span><span class="detail-value">${d.causale||'Vendita'}</span></div>
+        <div class="detail-row"><span class="detail-label">Porto</span><span class="detail-value">${d.porto||'Franco'}</span></div>
         <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
         <div class="detail-row"><span class="detail-label">Luogo di carico</span><span class="detail-value">${d.luogo_carico||d.mittente?.indirizzo||'—'}</span></div>
         <div class="detail-row"><span class="detail-label">Destinatario</span><span class="detail-value">${d.destinatario.nome}</span></div>
@@ -1439,6 +1486,8 @@ async function openDDet(id) {
         <div class="card-title">Dettagli documento</div>
         <div class="detail-row"><span class="detail-label">Numero</span><span class="detail-value">${d.id}</span></div>
         <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${d.data}</span></div>
+        <div class="detail-row"><span class="detail-label">Causale</span><span class="detail-value">${d.causale||'Vendita'}</span></div>
+        <div class="detail-row"><span class="detail-label">Porto</span><span class="detail-value">${d.porto||'Franco'}</span></div>
         <div class="detail-row"><span class="detail-label">Mittente</span><span class="detail-value">${d.mittente.nome}</span></div>
         <div class="detail-row"><span class="detail-label">Vettore</span><span class="detail-value">${d.vettore.nome}</span></div>
         ${d.autista ? `<div class="detail-row"><span class="detail-label">Autista</span><span class="detail-value">${d.autista}</span></div>` : ''}
@@ -1665,6 +1714,25 @@ async function downloadPdf(ddtId) {
   doc.text(`Data: ${d.data}  ·  Stato: ${statoLabel[d.stato] || d.stato}`, W - M, 20, { align: 'right' });
   y = 42;
 
+  // ── Riga causale/porto/autista ────────────────────────────
+  doc.setFillColor(247, 247, 246);
+  doc.rect(M, y, W - M * 2, 10, 'F');
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
+  doc.text('CAUSALE:', M + 2, y + 4);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
+  doc.text(d.causale || 'Vendita', M + 24, y + 4);
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
+  doc.text('PORTO:', M + 65, y + 4);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
+  doc.text(d.porto || 'Franco', M + 83, y + 4);
+  if (d.autista) {
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
+    doc.text('AUTISTA:', M + 118, y + 4);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
+    doc.text(`${d.autista}${d.targa_1 ? ' · ' + d.targa_1 : ''}${d.targa_2 ? ' / ' + d.targa_2 : ''}`, M + 138, y + 4, { maxWidth: W - M - 140 });
+  }
+  y += 14;
+
   // ── Tre soggetti ─────────────────────────────────────────
   const boxW = (W - M * 2 - 8) / 3;
   const parties = [
@@ -1684,7 +1752,18 @@ async function downloadPdf(ddtId) {
     if (p.data.piva)      doc.text(`P.IVA: ${p.data.piva}`,  x + 4, y + 18, { maxWidth: boxW - 8 });
     if (p.data.indirizzo) doc.text(p.data.indirizzo,          x + 4, y + 23, { maxWidth: boxW - 8 });
   });
-  y += 32;
+  y += 30;
+
+  // ── Luogo carico / luogo consegna ─────────────────────────
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
+  doc.text('LUOGO DI CARICO:', M, y);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
+  doc.text(d.luogo_carico || d.mittente?.indirizzo || '—', M + 36, y, { maxWidth: 65 });
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
+  doc.text('LUOGO DI CONSEGNA:', M + 108, y);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
+  doc.text(d.luogo_consegna || d.destinatario?.indirizzo || '—', M + 147, y, { maxWidth: W - M - 149 });
+  y += 10;
 
   // ── Tabella merce ─────────────────────────────────────────
   doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(44, 44, 42);
@@ -1739,6 +1818,30 @@ async function downloadPdf(ddtId) {
     doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(95, 94, 90);
     doc.text(t.ts || 'In attesa', M + 9, y + 4);
     y += 11;
+  });
+
+  // ── Spazi firma ───────────────────────────────────────────
+  const firmY = 255;
+  const firmW = (W - M * 2 - 12) / 3;
+  const firms = [
+    { label: 'Firma e timbro Mittente', note: '' },
+    { label: 'Firma Vettore / Autista', note: d.autista ? `(${d.autista})` : '' },
+    { label: 'Conferma ricezione Destinatario', note: d.stato === 'consegnato' ? `✓ Confermato digitalmente` : 'In attesa di conferma' }
+  ];
+  firms.forEach((f, i) => {
+    const x = M + i * (firmW + 6);
+    doc.setDrawColor(211, 209, 199); doc.setLineWidth(0.3);
+    doc.rect(x, firmY, firmW, 20, 'S');
+    doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(95, 94, 90);
+    doc.text(f.label, x + 3, firmY + 5, { maxWidth: firmW - 6 });
+    if (f.note) {
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(44, 44, 42);
+      doc.text(f.note, x + 3, firmY + 14, { maxWidth: firmW - 6 });
+    }
+    if (i === 2 && d.stato === 'consegnato') {
+      const tl = d.timeline.find(t => t.label === 'Consegna confermata');
+      if (tl?.ts) { doc.setFontSize(6.5); doc.text(tl.ts, x + 3, firmY + 18, { maxWidth: firmW - 6 }); }
+    }
   });
 
   // ── Footer ────────────────────────────────────────────────
